@@ -17,6 +17,9 @@ class LoginForm(AuthenticationForm):
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
     )
 
+    def confirm_login_allowed(self, user):
+        pass  # handled in LoginView.form_valid
+
 
 class SignupForm(forms.ModelForm):
     """Auto-registro do técnico (RF-02)."""
@@ -55,6 +58,7 @@ class SignupForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password1'])
+        user.is_active = False
         if commit:
             user.save()
         return user

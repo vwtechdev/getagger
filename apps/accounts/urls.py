@@ -6,4 +6,5 @@ app_name = 'accounts'
 
 urlpatterns = [
     path('signup/', views.signup, name='signup'),
+    path('pending-approval/', views.pending_approval, name='pending_approval'),
 ]

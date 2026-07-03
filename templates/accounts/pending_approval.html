@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Aprovação pendente — Getagger{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm text-center">
+            <div class="card-body py-5">
+                <div class="mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="text-warning" viewBox="0 0 16 16">
+                        <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2M5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1"/>
+                    </svg>
+                </div>
+                <h1 class="h4 mb-3">Aprovação pendente</h1>
+                <p class="text-muted mb-4">
+                    Sua conta foi criada e está aguardando aprovação do administrador.
+                    Assim que for aprovada, você receberá acesso ao sistema.
+                </p>
+                <p class="text-muted mb-4">
+                    Tente fazer login novamente mais tarde.
+                </p>
+                <a href="{% url 'login' %}" class="btn btn-primary">Voltar para o login</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
