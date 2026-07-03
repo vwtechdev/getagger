@@ -5,11 +5,15 @@
 """
 from apps.associations.repositories import AssociationRepository
 from apps.labels import label_generator
-from apps.labels.models import InvoiceLabel, PartLabel
+from apps.labels.models import InvoiceLabel, LabelSettings, PartLabel
 from apps.labels.repositories import InvoiceLabelRepository, PartLabelRepository
 
 
 class LabelService:
+    @staticmethod
+    def get_settings(technician):
+        settings, _ = LabelSettings.objects.get_or_create(technician=technician)
+        return settings
     # -------------------------------------------------- Romaneio (InvoiceLabel)
     @staticmethod
     def ensure_invoice_labels(invoice):
@@ -24,9 +28,11 @@ class LabelService:
         return InvoiceLabelRepository.for_invoice(invoice)
 
     @staticmethod
-    def generate_invoice_labels_pdf(invoice):
+    def generate_invoice_labels_pdf(invoice, settings=None):
         """PDF (bytes) com as etiquetas romaneio, em PDF separado (RN-11/RN-12)."""
-        return label_generator.generate_invoice_labels_pdf(invoice)
+        if settings is None:
+            settings = LabelService.get_settings(invoice.technician)
+        return label_generator.generate_invoice_labels_pdf(invoice, settings)
 
     # ----------------------------------------------------- Peças (PartLabel)
     @staticmethod
@@ -41,6 +47,8 @@ class LabelService:
         return PartLabelRepository.for_invoice(invoice)
 
     @staticmethod
-    def generate_part_labels_pdf(invoice):
+    def generate_part_labels_pdf(invoice, settings=None):
         etiquetas = LabelService.ensure_part_labels(invoice)
-        return label_generator.generate_part_labels_pdf(etiquetas)
+        if settings is None:
+            settings = LabelService.get_settings(invoice.technician)
+        return label_generator.generate_part_labels_pdf(etiquetas, settings)

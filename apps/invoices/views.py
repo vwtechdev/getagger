@@ -48,7 +48,8 @@ def invoice_labels_pdf(request, pk):
     """RF-08/RF-07: PDF separado das etiquetas romaneio (download/reimpressão)."""
     invoice = InvoiceService.get_for_technician(pk, request.user)
     from apps.labels.services import LabelService
-    pdf = LabelService.generate_invoice_labels_pdf(invoice)
+    settings = LabelService.get_settings(request.user)
+    pdf = LabelService.generate_invoice_labels_pdf(invoice, settings)
     resp = HttpResponse(pdf, content_type='application/pdf')
     resp['Content-Disposition'] = f'inline; filename="romaneio_{invoice.number}.pdf"'
     return resp

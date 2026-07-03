@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from apps.associations.models import Association
@@ -46,3 +47,42 @@ class InvoiceLabel(BaseModel):
 
     def __str__(self):
         return f'Romaneio {self.volume_index}/{self.invoice.volumes}'
+
+
+class LabelSettings(BaseModel):
+    """Configuração de impressão de etiquetas por técnico."""
+
+    PAGE_FORMATS = [
+        ('A4', 'A4'),
+        ('THERMAL_80MM', 'Bobina 80mm'),
+    ]
+
+    technician = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='label_settings',
+        verbose_name='Técnico',
+    )
+    page_format = models.CharField(
+        max_length=20,
+        choices=PAGE_FORMATS,
+        default='A4',
+        verbose_name='Formato de página',
+    )
+    margin = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        default=8.0,
+        verbose_name='Margem (mm)',
+    )
+    font_size = models.PositiveIntegerField(
+        default=11,
+        verbose_name='Tamanho da fonte (pt)',
+    )
+
+    class Meta:
+        verbose_name = 'Configuração de etiqueta'
+        verbose_name_plural = 'Configurações de etiquetas'
+
+    def __str__(self):
+        return f'{self.technician.name} — {self.get_page_format_display()}'
