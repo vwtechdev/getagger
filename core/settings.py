@@ -31,6 +31,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -156,3 +157,69 @@ LOGOUT_REDIRECT_URL = 'login'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# django-jazzmin — tema escuro para o admin
+JAZZMIN_SETTINGS = {
+    "site_title": "Getagger Admin",
+    "site_header": "Getagger",
+    "site_brand": "Getagger",
+    "welcome_sign": "Bem-vindo ao Getagger Admin",
+    "copyright": "Getagger",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "order_with_respect_to": [
+        "accounts.User",
+        "services.ServiceCall",
+        "invoices.Invoice",
+        "associations.Association",
+        "labels.PartLabel",
+        "labels.InvoiceLabel",
+        "labels.LabelSettings",
+    ],
+    "icons": {
+        "accounts.User": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "services.ServiceCall": "fas fa-wrench",
+        "invoices.Invoice": "fas fa-file-invoice",
+        "invoices.InvoiceItem": "fas fa-cube",
+        "associations.Association": "fas fa-link",
+        "labels.PartLabel": "fas fa-tag",
+        "labels.InvoiceLabel": "fas fa-barcode",
+        "labels.LabelSettings": "fas fa-cog",
+    },
+    "default_icon_parents": "fas fa-circle",
+    "default_icon_children": "fas fa-circle",
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "darkly",
+    "dark_mode_theme": "darkly",
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-primary",
+    "navbar": "navbar-dark",
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-dark",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme_switcher": False,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+}

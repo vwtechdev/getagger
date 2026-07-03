@@ -2,6 +2,8 @@
 
 Isolamento por técnico (RN-04). O PDF não é persistido — apenas extraído.
 """
+from django.db import transaction
+
 from apps.invoices import invoice_importer
 from apps.invoices.models import InvoiceItem
 from apps.invoices.repositories import InvoiceRepository
@@ -50,3 +52,21 @@ class InvoiceService:
         from apps.labels.services import LabelService
         LabelService.ensure_invoice_labels(invoice)
         return invoice
+
+    @staticmethod
+    @transaction.atomic
+    def delete(pk, technician):
+        """Exclui NF e registros relacionados, desarquivando ServiceCalls."""
+        invoice = InvoiceRepository.get_for_technician(pk, technician)
+
+        from apps.associations.models import Association
+        from apps.labels.models import InvoiceLabel, PartLabel
+
+        for assoc in Association.objects.filter(invoice_item__invoice=invoice):
+            PartLabel.objects.filter(association=assoc).delete()
+            assoc.service_call.unarchive()
+            assoc.delete()
+
+        InvoiceLabel.objects.filter(invoice=invoice).delete()
+        InvoiceItem.objects.filter(invoice=invoice).delete()
+        invoice.archive()

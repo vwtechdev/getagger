@@ -1,8 +1,12 @@
+import calendar
+
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
 from apps.invoices.services import InvoiceService
 from apps.labels.models import LabelSettings
@@ -36,8 +40,22 @@ def reprint(request):
 
     Só mostra NFs que possuem ao menos uma peça associada.
     """
-    invoices = InvoiceService.list_with_associations_by_technician(request.user)
-    return render(request, 'labels/reprint.html', {'invoices': invoices})
+    qs = InvoiceService.list_with_associations_by_technician(request.user)
+    q = request.GET.get('q', '').strip()
+    today = timezone.localdate()
+    default_from = today.replace(day=1).isoformat()
+    default_to = today.replace(day=calendar.monthrange(today.year, today.month)[1]).isoformat()
+    date_from = request.GET['date_from'].strip() if 'date_from' in request.GET else default_from
+    date_to = request.GET['date_to'].strip() if 'date_to' in request.GET else default_to
+    if q:
+        qs = qs.filter(Q(number__icontains=q) | Q(return_code__icontains=q))
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    return render(request, 'labels/reprint.html', {
+        'invoices': qs, 'q': q, 'date_from': date_from, 'date_to': date_to,
+    })
 
 
 @login_required

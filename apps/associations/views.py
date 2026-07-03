@@ -15,7 +15,6 @@ def _board_context(request, invoice):
         'counters': AssociationService.counters(invoice, request.user),
     }
 
-
 @login_required
 def association(request, pk):
     """RF-05: tela de associação visual (drag & drop). Manual (RN-06)."""
@@ -34,7 +33,6 @@ def association_create(request, pk):
                 service_call_id=request.POST.get('service_call_id'),
                 technician=request.user,
             )
-            messages.success(request, 'Peça associada.')
         except Exception as exc:
             messages.error(request, f'Não foi possível associar: {exc}')
     return render(request, 'associations/association_board.html', _board_context(request, invoice))
@@ -47,7 +45,6 @@ def association_undo(request, pk):
     if request.method == 'POST':
         try:
             AssociationService.undo(request.POST.get('association_id'), request.user)
-            messages.success(request, 'Associação desfeita.')
         except Exception as exc:
             messages.error(request, f'Não foi possível desfazer: {exc}')
     return render(request, 'associations/association_board.html', _board_context(request, invoice))

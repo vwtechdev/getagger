@@ -1,10 +1,18 @@
 from django import forms
+from django.utils import timezone
 
 from apps.services.models import ServiceCall
 
 
 class ServiceCallForm(forms.ModelForm):
     """Form de atendimento. ``date`` e ``technician`` tratados no serviço."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date'].required = False
+
+    def clean_date(self):
+        return self.cleaned_data.get('date') or timezone.localdate()
 
     class Meta:
         model = ServiceCall

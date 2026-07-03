@@ -1,16 +1,42 @@
+import calendar
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from apps.invoices.forms import InvoiceImportForm
 from apps.invoices.services import InvoiceService
 
 
+def _month_range():
+    today = timezone.localdate()
+    return (
+        today.replace(day=1).isoformat(),
+        today.replace(day=calendar.monthrange(today.year, today.month)[1]).isoformat(),
+    )
+
 @login_required
 def invoice_list(request):
-    invoices = InvoiceService.list_by_technician(request.user)
-    return render(request, 'invoices/invoice_list.html', {'invoices': invoices})
+    qs = InvoiceService.list_by_technician(request.user)
+    q = request.GET.get('q', '').strip()
+    default_from, default_to = _month_range()
+    date_from = request.GET['date_from'].strip() if 'date_from' in request.GET else default_from
+    date_to = request.GET['date_to'].strip() if 'date_to' in request.GET else default_to
+    if q:
+        qs = qs.filter(
+            Q(number__icontains=q) | Q(return_code__icontains=q)
+        )
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+    return render(request, 'invoices/invoice_list.html', {
+        'invoices': qs, 'q': q, 'date_from': date_from, 'date_to': date_to,
+    })
 
 
 @login_required
@@ -41,6 +67,17 @@ def invoice_detail(request, pk):
         'invoices/invoice_detail.html',
         {'invoice': invoice, 'items': items, 'romaneios': romaneios},
     )
+
+
+@login_required
+@require_POST
+def invoice_delete(request, pk):
+    try:
+        InvoiceService.delete(pk, request.user)
+        messages.success(request, 'Nota fiscal excluída.')
+    except Exception as exc:
+        messages.error(request, f'Erro ao excluir NF: {exc}')
+    return redirect('invoices:invoice_list')
 
 
 @login_required
