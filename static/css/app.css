@@ -1,0 +1,4 @@
+body { }
+.card-call { transition: transform .1s ease; }
+.card-call:hover { transform: translateY(-2px); }
+.drop-zone-over { outline: 2px dashed #0d6efd; outline-offset: -4px; }

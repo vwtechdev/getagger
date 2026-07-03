@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Importar NF — Getagger{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <h1 class="h3 mb-3">Importar Nota Fiscal</h1>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label" for="id_arquivo">Arquivo PDF</label>
+                        {{ form.arquivo }}
+                        <div class="form-text">O PDF é apenas extraído; não é armazenado.</div>
+                        {% if form.arquivo.errors %}<div class="text-danger small">{{ form.arquivo.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="id_volumes">{{ form.volumes.label }}</label>
+                        {{ form.volumes }}
+                        <div class="form-text">{{ form.volumes.help_text }}</div>
+                        {% if form.volumes.errors %}<div class="text-danger small">{{ form.volumes.errors }}</div>{% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" type="submit">Importar</button>
+                        <a href="{% url 'invoices:invoice_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

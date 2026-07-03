@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Peça com Defeito</h1>
+    <a href="{% url 'services:service_call_new' %}" class="btn btn-primary">Nova Peça com Defeito</a>
+</div>
+{% if calls %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+    {% for c in calls %}
+    <div class="col">
+        <a href="{% url 'services:service_call_detail' pk=c.pk %}" class="card-call card h-100 text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span class="badge bg-secondary">Chamado {{ c.ticket_number }}</span>
+                    <small class="text-muted">{{ c.date|date:"d/m/Y" }}</small>
+                </div>
+                <h5 class="card-title text-dark mt-2">{{ c.part_name }}</h5>
+                <p class="card-text text-secondary small mb-0">Defeito: {{ c.defect }}</p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center text-muted py-5">
+    <p>Nenhuma peça com defeito cadastrada.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Associação — NF-e {{ invoice.number }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Associação — NF-e {{ invoice.number }}</h1>
+    <div class="d-flex gap-2">
+        <a href="{% url 'labels:part_labels_pdf' pk=invoice.pk %}" class="btn btn-success btn-sm" target="_blank">Gerar etiquetas (peças)</a>
+        <a href="{% url 'invoices:invoice_labels_pdf' pk=invoice.pk %}" class="btn btn-outline-secondary btn-sm" target="_blank">Romaneio</a>
+        <a href="{% url 'invoices:invoice_detail' pk=invoice.pk %}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+    </div>
+</div>
+
+<div id="board" hx-target="#board" hx-swap="innerHTML">
+    {% include "associations/association_board.html" %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const createUrl = "{% url 'associations:association_create' pk=invoice.pk %}";
+
+    function csrfToken() {
+        const m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? m[1] : '';
+    }
+
+    function initBoard() {
+        const nfList = document.getElementById('nf-items');
+        if (nfList && !nfList.__sortable) {
+            Sortable.create(nfList, {
+                group: { name: 'nf', pull: 'clone', put: false },
+                sort: true, animation: 150,
+            });
+            nfList.__sortable = true;
+        }
+        document.querySelectorAll('.service-call-drop').forEach(function (zone) {
+            if (zone.__sortable) return;
+            Sortable.create(zone, {
+                group: { name: 'nf', put: true },
+                sort: false, animation: 150,
+                onAdd: function (evt) {
+                    const itemEl = evt.item;
+                    const itemId = itemEl.dataset.itemId;
+                    const callId = zone.dataset.serviceCallId;
+                    if (itemEl.parentNode) itemEl.parentNode.removeChild(itemEl);
+                    if (!itemId || !callId) return;
+                    fetch(createUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-CSRFToken': csrfToken(),
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({ item_id: itemId, service_call_id: callId }),
+                    }).then(function (r) { return r.text(); }).then(function (html) {
+                        const board = document.getElementById('board');
+                        board.innerHTML = html;
+                        initBoard();
+                    });
+                },
+            });
+            zone.__sortable = true;
+        });
+    }
+
+    document.body.addEventListener('htmx:afterSwap', function (e) {
+        if (e.detail.target && e.detail.target.id === 'board') initBoard();
+    });
+    document.addEventListener('DOMContentLoaded', initBoard);
+})();
+</script>
+{% endblock %}

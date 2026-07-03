@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="mb-3">
+                <label class="form-label" for="id_ticket_number">Número do chamado</label>
+                {{ form.ticket_number }}
+                {% if form.ticket_number.errors %}<div class="text-danger small">{{ form.ticket_number.errors }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="id_part_name">Nome da peça</label>
+                {{ form.part_name }}
+                <div class="form-text">Finalidade exclusivamente visual (drag &amp; drop).</div>
+                {% if form.part_name.errors %}<div class="text-danger small">{{ form.part_name.errors }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="id_defect">Defeito</label>
+                {{ form.defect }}
+                {% if form.defect.errors %}<div class="text-danger small">{{ form.defect.errors }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="id_date">Data</label>
+                {{ form.date }}
+                <div class="form-text">Automática (PT-BR) — pode ajustar se necessário.</div>
+                {% if form.date.errors %}<div class="text-danger small">{{ form.date.errors }}</div>{% endif %}
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Salvar</button>
+                <a href="{% url 'services:service_call_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

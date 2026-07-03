@@ -1,0 +1,70 @@
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <span class="badge bg-warning text-dark fs-6">Pendente: {{ counters.pending }}</span>
+    <span class="badge bg-success fs-6">Associada: {{ counters.associated }}</span>
+    <span class="badge bg-info text-dark fs-6">Restante: {{ counters.remaining }}</span>
+    <span class="badge bg-secondary fs-6">Total de itens: {{ counters.total_items }}</span>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <h2 class="h6">Peças da NF <small class="text-muted">(arraste)</small></h2>
+        <div id="nf-items" class="d-flex flex-column gap-2">
+            {% for item in items %}
+            <div class="card border-primary" data-item-id="{{ item.pk }}">
+                <div class="card-body p-2">
+                    <div class="fw-bold">{{ item.product_code }}</div>
+                    <div class="small text-muted">{{ item.description }}</div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-muted small">Todos os itens foram associados.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <h2 class="h6">Peças com Defeito <small class="text-muted">(solte aqui)</small></h2>
+        <div class="d-flex flex-column gap-2">
+            {% for c in service_calls %}
+            <div class="card service-call-drop" data-service-call-id="{{ c.pk }}">
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between">
+                        <span class="badge bg-secondary">Chamado {{ c.ticket_number }}</span>
+                        <small class="text-muted">{{ c.date|date:"d/m/Y" }}</small>
+                    </div>
+                    <div class="fw-bold mt-1">{{ c.part_name }}</div>
+                    <div class="small text-muted">Defeito: {{ c.defect }}</div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-muted small">Nenhum atendimento disponível.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<h2 class="h6 mt-4">Associados</h2>
+<div class="table-responsive">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr><th>CÓD. PROD</th><th>DESCRIÇÃO</th><th>Peça (atend.)</th><th>Chamado</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for assoc in associations %}
+            <tr>
+                <td>{{ assoc.invoice_item.product_code }}</td>
+                <td class="small">{{ assoc.invoice_item.description }}</td>
+                <td>{{ assoc.service_call.part_name }}</td>
+                <td>{{ assoc.service_call.ticket_number }}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger"
+                            hx-post="{% url 'associations:association_undo' pk=invoice.pk %}"
+                            hx-vals='{"association_id":"{{ assoc.pk }}"}'>Desfazer</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-muted small">Nenhuma associação ainda.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

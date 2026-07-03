@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Entrar — Getagger{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h3 mb-3 text-center">Getagger</h1>
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label" for="id_username">E-mail</label>
+                        <input type="email" name="username" autofocus class="form-control" id="id_username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="id_password">Senha</label>
+                        <input type="password" name="password" class="form-control" id="id_password" required>
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">Entrar</button>
+                </form>
+                <hr>
+                <p class="text-center mb-0"><a href="{% url 'accounts:signup' %}">Criar conta</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

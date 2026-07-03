@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}NF-e {{ invoice.number }} — Getagger{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Nota fiscal</h1>
+    <div class="d-flex gap-2">
+        <a href="{% url 'associations:association' pk=invoice.pk %}" class="btn btn-primary btn-sm">Associar peças</a>
+        <a href="{% url 'invoices:invoice_labels_pdf' pk=invoice.pk %}" class="btn btn-outline-secondary btn-sm" target="_blank">Romaneio (PDF)</a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">NF-e</dt><dd class="col-sm-9">{{ invoice.number }}</dd>
+            <dt class="col-sm-3">Romaneio</dt><dd class="col-sm-9">{{ invoice.return_code }}</dd>
+            <dt class="col-sm-3">Volumes</dt><dd class="col-sm-9">{{ invoice.volumes }}</dd>
+            <dt class="col-sm-3">Importada em</dt><dd class="col-sm-9">{{ invoice.created_at|date:"d/m/Y H:i" }}</dd>
+        </dl>
+    </div>
+</div>
+
+<h2 class="h5 mt-4">Itens da NF</h2>
+<div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+        <thead><tr><th>CÓD. PROD</th><th>DESCRIÇÃO</th></tr></thead>
+        <tbody>
+            {% for item in items %}
+            <tr><td>{{ item.product_code }}</td><td>{{ item.description }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h2 class="h5 mt-4">Etiquetas romaneio ({{ romaneios|length }}/{{ invoice.volumes }})</h2>
+<p class="text-muted small">1 etiqueta por volume, numeradas 1/{{ invoice.volumes }}..{{ invoice.volumes }}/{{ invoice.volumes }}.</p>
+{% endblock %}

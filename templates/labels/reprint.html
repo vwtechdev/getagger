@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Reimprimir etiquetas — Getagger{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Reimprimir etiquetas</h1>
+<p class="text-muted small">Etiquetas já geradas por NF — peças e romaneio.</p>
+{% if invoices %}
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr><th>NF-e</th><th>Romaneio</th><th>Volumes</th><th>Itens</th><th>Peças</th><th>Romaneio</th></tr>
+        </thead>
+        <tbody>
+            {% for n in invoices %}
+            <tr>
+                <td>{{ n.number }}</td>
+                <td>{{ n.return_code }}</td>
+                <td>{{ n.volumes }}</td>
+                <td>{{ n.items.count }}</td>
+                <td><a href="{% url 'labels:part_labels_pdf' pk=n.pk %}" target="_blank" class="btn btn-sm btn-outline-success">Peças (PDF)</a></td>
+                <td><a href="{% url 'invoices:invoice_labels_pdf' pk=n.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary">Romaneio (PDF)</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center text-muted py-5"><p>Nenhuma Nota Fiscal Associada.</p></div>
+{% endif %}
+{% endblock %}
