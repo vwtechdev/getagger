@@ -151,6 +151,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'services:service_call_list'
 LOGOUT_REDIRECT_URL = 'login'
+AUTHENTICATION_BACKENDS = ['apps.accounts.backends.AllowInactiveBackend']
 
 
 # Default primary key field type
@@ -163,8 +164,10 @@ JAZZMIN_SETTINGS = {
     "site_title": "Getagger Admin",
     "site_header": "Getagger",
     "site_brand": "Getagger",
-    "welcome_sign": "Bem-vindo ao Getagger Admin",
-    "copyright": "Getagger",
+    "site_logo": "img/logo.png",
+    "site_logo_width": 32,
+    "welcome_sign": "Getagger Admin",
+    "copyright": "VWTech Dev",
     "show_sidebar": True,
     "navigation_expanded": True,
     "order_with_respect_to": [

@@ -60,7 +60,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
             </svg>
             <h2 class="h5 mb-2" style="color:#FFFFFF">Excluir Nota Fiscal?</h2>
-            <p class="text-muted small mb-4">Esta ação não pode ser desfeita. Atendimentos associados serão liberados.</p>
+            <p class="text-muted small mb-4">Esta ação não pode ser desfeita. Peças com defeito associadas serão liberados.</p>
             <div class="d-flex gap-2 justify-content-center">
                 <form method="post" action="{% url 'invoices:invoice_delete' pk=invoice.pk %}" style="display:inline">
                     {% csrf_token %}

@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import RedirectView
 
 from apps.accounts.views import LoginView, LogoutView
+from apps.services.views import service_call_list
 
 
 urlpatterns = [
@@ -10,7 +10,7 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('', include('apps.accounts.urls')),
-    path('', RedirectView.as_view(url='/service-calls/', permanent=False), name='home'),
+    path('', service_call_list, name='home'),
     path('', include('apps.services.urls')),
     path('', include('apps.invoices.urls')),
     path('', include('apps.associations.urls')),

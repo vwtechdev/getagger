@@ -3,6 +3,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">Reimprimir etiquetas</h1>
+    <div class="d-flex gap-2">
+        <a href="{% url 'labels:reprint' %}" class="btn btn-outline-secondary d-flex align-items-center d-md-none">Limpar</a>
+    </div>
 </div>
 
 <div class="row g-2 mb-3">
@@ -36,7 +39,7 @@
                hx-include="closest .row"
                hx-push-url="true">
     </div>
-    <div class="col-auto">
+    <div class="col-auto d-none d-md-block">
         <a href="{% url 'labels:reprint' %}" class="btn btn-outline-secondary h-100 d-flex align-items-center">Limpar</a>
     </div>
 </div>

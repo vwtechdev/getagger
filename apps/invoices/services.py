@@ -48,6 +48,10 @@ class InvoiceService:
                 description=item['description'],
             )
 
+        # Associação automática (RN-05/RN-06): match part_name ↔ description.
+        from apps.associations.services import AssociationService
+        AssociationService.auto_match(invoice, technician)
+
         # Romaneio: 1 etiqueta por volume (RN-11/RN-12) — delega ao app labels.
         from apps.labels.services import LabelService
         LabelService.ensure_invoice_labels(invoice)

@@ -23,8 +23,8 @@ class ServiceCall(BaseModel):
     defect = models.CharField(max_length=255, verbose_name='Defeito')
 
     class Meta:
-        verbose_name = 'Atendimento'
-        verbose_name_plural = 'Atendimentos'
+        verbose_name = 'Peça com Defeito'
+        verbose_name_plural = 'Peças com Defeito'
         ordering = ['-date', '-created_at']
 
     def __str__(self):

@@ -6,12 +6,14 @@
     <title>{% block title %}Getagger{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{% static 'css/app.css' %}" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
 </head>
 <body>
+{% block navbar %}
 <nav class="navbar mb-4">
     <div class="container">
         <a class="navbar-brand" href="{% url 'home' %}">
-            <img src="{% static 'img/logo.png' %}" alt="Getagger" height="64" class="me-2" style="margin:-12px 0">
+            <img src="{% static 'img/logo.png' %}" alt="Getagger" height="48" class="me-2" style="margin:-12px 0">
             Getagger
         </a>
 
@@ -23,7 +25,7 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'labels:reprint' %}">Reimprimir</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'labels:label_settings' %}">Configurações</a></li>
             </ul>
-            <span class="navbar-text me-2">{{ request.user.name }}</span>
+            <span class="navbar-text me-2">Olá, {{ request.user.name }}</span>
         </div>
         {% endif %}
 
@@ -37,15 +39,15 @@
         {% endif %}
     </div>
 </nav>
+{% endblock %}
 
 <div class="container pb-5">
     {% if messages %}
     <div class="toast-container position-fixed top-0 end-0 p-3">
         {% for message in messages %}
-        <div class="toast align-items-center border-0 show" role="alert"
-             style="background: rgba(15,23,42,0.92); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.06);">
+        <div class="toast align-items-center border-0 show toast-{{ message.level_tag }}" role="alert">
             <div class="d-flex">
-                <div class="toast-body" style="color: #CBD5E1;">{{ message }}</div>
+                <div class="toast-body">{{ message }}</div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>

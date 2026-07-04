@@ -35,12 +35,18 @@ def _draw_one(c, cx, cy, cw, ch, title, lines, font_size):
     c.drawCentredString(cx + cw / 2, title_y, title)
 
     line_h = font_size * 1.35
-    ly = title_y - line_h * 0.7
+    ly = title_y - line_h * 1.2
     for label, value in lines:
         c.setFont('Helvetica-Bold', font_size - 1)
         c.drawString(cx + pad + 2 * mm, ly, f'{label}:')
         c.setFont('Helvetica', font_size)
-        c.drawString(cx + pad + 25 * mm, ly, str(value))
+        max_val_w = cw - 2 * pad - 25 * mm - 2 * mm
+        text = str(value)
+        if c.stringWidth(text) > max_val_w:
+            while text and c.stringWidth(text + '…') > max_val_w:
+                text = text[:-1]
+            text = text + '…'
+        c.drawString(cx + pad + 25 * mm, ly, text)
         ly -= line_h
 
 
@@ -51,7 +57,7 @@ def _part_lines(label):
     tech = call.technician.name or call.technician.email
     return [
         ('Código', item.product_code),
-        ('Peça', call.part_name),
+        ('Peça', item.description),
         ('Chamado', call.ticket_number),
         ('Data', call.date.strftime('%d/%m/%Y')),
         ('Técnico', tech),

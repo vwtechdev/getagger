@@ -1,8 +1,11 @@
-"""Casos de uso de Associação (RF-05). SEMPRE manual — RN-05, RN-06.
+"""Casos de uso de Associação (RF-05). Suporta auto-match (RN-05) e manual (RN-06).
 
-Nenhum método compara/infer ``part_name``. O usuário informa explicitamente
-item_id + service_call_id no drag & drop.
+Auto-match usa substring + fuzzy ratio + normalização fonética (sem dependências).
+Manual: usuário informa explicitamente item_id + service_call_id no drag & drop.
 """
+import unicodedata
+from difflib import SequenceMatcher
+
 from apps.associations.repositories import AssociationRepository
 from apps.invoices.models import InvoiceItem
 from apps.invoices.repositories import InvoiceItemRepository
@@ -19,6 +22,35 @@ class AssociationService:
     def pending_items(invoice):
         """Itens da NF ainda não associados (não usa part_name — RN-05)."""
         return InvoiceItemRepository.pending_for_invoice(invoice)
+
+    @staticmethod
+    def auto_match(invoice, technician):
+        """Associa automaticamente itens pendentes a atendimentos compatíveis.
+
+        Matching de 3 níveis (tudo normalizado: lowercase + sem acentos):
+          1. Substring: part_name contido em description
+          2. Fuzzy ratio ≥ 0.85 entre strings completas
+          3. Fuzzy ratio ≥ 0.85 entre palavras individuais
+
+        Retorna dict com matched e pending.
+        """
+        items = AssociationService.pending_items(invoice)
+        calls = list(AssociationService.available_service_calls(technician, invoice))
+        matched = 0
+        for item in items:
+            if not item.description:
+                continue
+            for call in calls:
+                if call.part_name and _match(call.part_name, item.description):
+                    AssociationService.create(
+                        item_id=item.pk,
+                        service_call_id=call.pk,
+                        technician=technician,
+                    )
+                    matched += 1
+                    calls = [c for c in calls if c.pk != call.pk]
+                    break
+        return {'matched': matched, 'pending': items.count() - matched}
 
     @staticmethod
     def available_service_calls(technician, invoice):
@@ -73,6 +105,37 @@ class AssociationService:
         service_call = association.service_call
         AssociationRepository.delete(association)
         service_call.unarchive()
+
+
+def _normalize(text):
+    """Remove acentos, lowercase, strips."""
+    nfkd = unicodedata.normalize('NFKD', str(text))
+    return nfkd.encode('ascii', 'ignore').decode('ascii').lower().strip()
+
+
+def _match(part_name, description):
+    """Retorna True se part_name corresponde à descrição (3 níveis com guardrails)."""
+    a = _normalize(part_name)
+    b = _normalize(description)
+    if not a or not b:
+        return False
+    # 1. Substring (rápido)
+    if a in b:
+        return True
+    # 2. Fuzzy full — só se tamanhos forem compatíveis
+    len_a, len_b = len(a), len(b)
+    if max(len_a, len_b) / min(len_a, len_b, 1) <= 3:
+        if SequenceMatcher(None, a, b).ratio() >= 0.85:
+            return True
+    # 3. Fuzzy por palavra — só até 50 comparações
+    words_a = a.split()
+    words_b = b.split()
+    if len(words_a) * len(words_b) <= 50:
+        for wa in words_a:
+            for wb in words_b:
+                if SequenceMatcher(None, wa, wb).ratio() >= 0.85:
+                    return True
+    return False
 
 
 def _item_for_technician(item_id, technician):

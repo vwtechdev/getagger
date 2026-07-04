@@ -57,7 +57,7 @@
 
                     <div class="mb-4">
                         <label class="form-label" for="id_volumes">{{ form.volumes.label }}</label>
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex flex-column flex-sm-row align-items-center gap-2 gap-sm-3">
                             <div class="stepper">
                                 <button type="button" @click="volumes = Math.max(1, volumes - 1)" :disabled="volumes <= 1">−</button>
                                 <input type="number" name="volumes" id="id_volumes"

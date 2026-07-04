@@ -1,13 +1,13 @@
-# getagger
+# Getagger
 
-Gerador de etiquetas de devolucao de pecas para tecnicos de atendimento.
+Getagger é uma aplicação web desenvolvida em Django para automatizar o processo dos técnicos da Wyntech Serviços em Tecnologia da Informação, com objetivo principal de gerar etiquetas para devolução de peças com defeito para o estoque conforme padrões do estoque da empresa.
 
 ## Funcionalidades
 
-- Cadastro de atendimentos (chamado, peca, defeito)
+- Cadastro de Peças com defeito (chamado, peça, defeito)
 - Importacao de Nota Fiscal em PDF com extracao automatica de itens
-- Associacao visual por drag & drop entre pecas da NF e atendimentos
-- Geracao de etiquetas de pecas (1 por peca) em PDF
+- Associacao visual por drag & drop entre peças da NF e peças com defeitos
+- Geracao de etiquetas de peças (1 por peça) em PDF
 - Geracao de etiquetas de romaneio (1 por volume) em PDF separado
 - Reimpressao de etiquetas
 - Isolamento de dados por tecnico

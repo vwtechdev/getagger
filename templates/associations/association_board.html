@@ -5,12 +5,41 @@
     <span class="badge bg-secondary fs-6">Total de itens: {{ counters.total_items }}</span>
 </div>
 
+{% if no_match %}
+<div class="alert alert-info py-2 px-3 mb-3 small">Nenhuma associação automática possível.</div>
+{% endif %}
+
+{% if counters.pending and counters.remaining %}
+<div class="mb-3">
+    <button type="button"
+            class="btn btn-sm w-100 d-md-none"
+            x-data="{ disabled: false }"
+            :disabled="disabled"
+            @click="disabled = true"
+            :title="disabled ? 'Associação já realizada' : 'Associar Automaticamente'"
+            style="display:inline-flex;align-items:center;justify-content:center;gap:6px;
+                   background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.15));
+                   border: 1px solid rgba(139,92,246,0.3); color: #A78BFA; border-radius: 12px;
+                   padding: 10px 16px; font-weight: 500; font-size: 0.85rem;
+                   transition: all 0.2s ease;"
+            hx-post="{% url 'associations:association_auto_match' pk=invoice.pk %}"
+            hx-target="#board"
+            hx-swap="innerHTML">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/>
+        </svg>
+        Associar automaticamente
+    </button>
+</div>
+{% endif %}
+
 <div class="row g-3">
     <div class="col-md-6">
-        <h2 class="h6">Peças da NF <small class="text-muted">(arraste)</small></h2>
+        <h2 class="h6">Peças da NF <small class="text-muted">(arraste para Peças com Defeito)</small></h2>
         <div id="nf-items" class="d-flex flex-column gap-2">
             {% for item in items %}
-            <div class="card card-call border-primary" data-item-id="{{ item.pk }}">
+            <div class="card card-call border-primary nf-item" data-item-id="{{ item.pk }}"
+                 title="Arraste para Peças com Defeito para associar">
                 <div class="card-body p-2">
                     <div class="fw-bold">{{ item.product_code }}</div>
                     <div class="small text-muted">{{ item.description }}</div>
@@ -37,7 +66,7 @@
                 </div>
             </div>
             {% empty %}
-            <div class="text-muted small">Nenhum atendimento disponível.</div>
+            <div class="text-muted small">Nenhuma peça com defeito disponível.</div>
             {% endfor %}
         </div>
     </div>

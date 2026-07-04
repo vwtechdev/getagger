@@ -66,9 +66,10 @@ class PartLabelTest(TestCase):
     def setUp(self):
         self.tech = User.objects.create_user(email='a@example.com', password='p', name='A')
         self.call = ServiceCallService.create(
-            technician=self.tech, ticket_number='1', part_name='SSD', defect='x')
+            technician=self.tech, ticket_number='1', part_name='Monitor', defect='x')
         self.invoice = InvoiceService.import_invoice(
             technician=self.tech, upload=build_invoice_pdf(), volumes=1)
+        # 'Monitor' não está em nenhuma descrição da NF → sem auto-match
         self.item = self.invoice.items.first()
         self.assoc = AssociationService.create(
             item_id=self.item.pk, service_call_id=self.call.pk, technician=self.tech)

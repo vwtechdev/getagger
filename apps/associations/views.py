@@ -39,6 +39,18 @@ def association_create(request, pk):
 
 
 @login_required
+def association_auto_match(request, pk):
+    """Endpoint HTMX: associa automaticamente itens pendentes (RN-05)."""
+    invoice = InvoiceService.get_for_technician(pk, request.user)
+    ctx = _board_context(request, invoice)
+    if request.method == 'POST':
+        result = AssociationService.auto_match(invoice, request.user)
+        if result['matched'] == 0:
+            ctx['no_match'] = True
+    return render(request, 'associations/association_board.html', ctx)
+
+
+@login_required
 def association_undo(request, pk):
     """Endpoint HTMX: desfaz associação (libera item e atendimento)."""
     invoice = InvoiceService.get_for_technician(pk, request.user)
