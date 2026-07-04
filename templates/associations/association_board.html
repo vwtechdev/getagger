@@ -57,12 +57,13 @@
             {% for c in service_calls %}
             <div class="card card-call service-call-drop" data-service-call-id="{{ c.pk }}">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between mb-1">
+                    <div class="d-flex justify-content-between gap-2">
                         <span class="badge bg-secondary">Chamado {{ c.ticket_number }}</span>
-                        <small class="text-muted">{{ c.date|date:"d/m/Y" }}</small>
                     </div>
-                    <div class="fw-bold mb-1">{{ c.part_name }}</div>
-                    <div class="small text-muted">Defeito: {{ c.defect }}</div>
+                    <h5 class="card-title mt-2">{{ c.part_name }}</h5>
+                    <p class="card-text small mb-0">Defeito: {{ c.defect }}</p>
+                    {% if c.serial_number %}<span class="badge bg-secondary mt-2">NS: {{ c.serial_number }}</span>{% endif %}
+                    <small class="text-muted mt-2 d-block text-end">{{ c.date|date:"d/m/Y" }}</small>
                 </div>
             </div>
             {% empty %}
@@ -81,11 +82,11 @@
             <div class="d-flex justify-content-between align-items-start gap-2">
                 <div class="min-w-0 flex-grow-1">
                     <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                        <span class="fw-bold" style="color:#FFFFFF">{{ assoc.invoice_item.product_code }}</span>
                         <span class="badge bg-secondary">Chamado {{ assoc.service_call.ticket_number }}</span>
                     </div>
+                    <span class="fw-bold" style="color:#FFFFFF">CÓD: {{ assoc.invoice_item.product_code }}</span>
                     <div class="small text-muted mb-1">{{ assoc.invoice_item.description }}</div>
-                    <div class="small text-muted">Peça: {{ assoc.service_call.part_name }}</div>
+                    <div class="small text-muted">DEFEITO: {{ assoc.service_call.defect }}</div>
                 </div>
                 <button type="button"
                         class="btn btn-sm btn-outline-danger flex-shrink-0"

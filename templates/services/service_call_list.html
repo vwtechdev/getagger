@@ -54,11 +54,11 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between gap-2">
                         <span class="badge bg-secondary">Chamado {{ c.ticket_number }}</span>
-                        <small class="text-muted">{{ c.date|date:"d/m/Y" }}</small>
                     </div>
                     <h5 class="card-title mt-2">{{ c.part_name }}</h5>
                     <p class="card-text small mb-0">Defeito: {{ c.defect }}</p>
                     {% if c.serial_number %}<span class="badge bg-secondary mt-2">NS: {{ c.serial_number }}</span>{% endif %}
+                    <small class="text-muted mt-2 d-block text-end">{{ c.date|date:"d/m/Y" }}</small>
                 </div>
             </a>
         </div>

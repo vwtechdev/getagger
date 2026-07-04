@@ -14,13 +14,13 @@
                     </div>
                     <div class="mb-3" x-data="barcodeScanner">
                         <label class="form-label" for="id_serial_number">Número de Série</label>
-                        <div class="input-group">
+                        <div class="serial-wrapper">
                             <input type="text" name="serial_number" id="id_serial_number"
-                                   class="form-control" placeholder="Escaneie ou digite o nº de série"
+                                   class="form-control serial-input flex-fill" placeholder="Escaneie ou digite o nº de série"
                                    inputmode="url" autocomplete="off"
                                    value="{{ form.serial_number.value|default:'' }}"
                                    x-ref="serialInput">
-                            <button type="button" class="btn btn-outline-secondary d-md-none"
+                            <button type="button" class="btn btn-outline-secondary serial-btn d-md-none"
                                     style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
                                     x-show="supported"
                                     @click="startScan" :disabled="scanning"
@@ -39,7 +39,7 @@
                                 <template x-if="!error">
                                     <div>
                                         <h2 class="h5 mb-3" style="color:#FFFFFF">Escanear Código de Barras</h2>
-                                        <div id="scanner-preview" style="width:100%;min-height:240px;background:#000;border-radius:12px;overflow:hidden"></div>
+                                        <div id="scanner-preview" style="width:100%;aspect-ratio:4/3;background:#000;border-radius:12px;overflow:hidden"></div>
                                         <p class="text-muted small mt-2 mb-3">Aponte a câmera para o código de barras da etiqueta.</p>
                                         <button class="btn btn-outline-secondary" type="button" @click="stopScan">Cancelar</button>
                                     </div>

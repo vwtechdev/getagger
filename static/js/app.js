@@ -18,12 +18,13 @@ document.addEventListener('alpine:init', () => {
         scanner: null,
         error: '',
         get supported() {
-            return typeof Html5Qrcode !== 'undefined' && !!navigator.mediaDevices;
+            return typeof Html5Qrcode !== 'undefined';
         },
         async startScan() {
             this.error = '';
             this.scanning = true;
             await this.$nextTick();
+            await new Promise(r => requestAnimationFrame(r));
             try {
                 this.scanner = new Html5Qrcode('scanner-preview');
                 await this.scanner.start(

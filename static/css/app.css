@@ -756,3 +756,22 @@ hr {
         padding-bottom: 64px;
     }
 }
+
+/* ===== Serial Number Input + Scan Button ===== */
+.serial-wrapper {
+    display: flex;
+}
+.serial-input {
+    border-radius: 12px;
+}
+.serial-btn {
+    margin-left: -1px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+@media (max-width: 767.98px) {
+    .serial-input {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+}

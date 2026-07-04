@@ -55,7 +55,7 @@ def _part_lines(label):
     call = assoc.service_call
     item = assoc.invoice_item
     tech = call.technician.name or call.technician.email
-    return [
+    lines = [
         ('Código', item.product_code),
         ('Peça', item.description),
         ('Chamado', call.ticket_number),
@@ -63,6 +63,9 @@ def _part_lines(label):
         ('Técnico', tech),
         ('Defeito', call.defect),
     ]
+    if call.serial_number:
+        lines.insert(3, ('N/S', call.serial_number))
+    return lines
 
 
 def _invoice_lines(invoice, index, total):
@@ -85,8 +88,9 @@ def generate_part_labels_pdf(part_labels, settings):
         c.save()
         return buf.getvalue()
 
+    max_lines = max(len(_part_lines(pl)) for pl in part_labels)
     if settings.page_format == 'A4':
-        _render_a4(c, part_labels, 'ETIQUETA DE DEFEITO', _part_lines, 6, font_size, margin)
+        _render_a4(c, part_labels, 'ETIQUETA DE DEFEITO', _part_lines, max_lines, font_size, margin)
     else:
         _render_thermal(c, part_labels, 'ETIQUETA DE DEFEITO', _part_lines, font_size)
 
