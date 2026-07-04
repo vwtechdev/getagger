@@ -3,9 +3,11 @@ from django.urls import include, path
 
 from apps.accounts.views import LoginView, LogoutView
 from apps.services.views import service_call_list
+from core.views import deploy
 
 
 urlpatterns = [
+    path('deploy/<str:token>/', deploy, name='deploy'),
     path('admin/', admin.site.urls),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),

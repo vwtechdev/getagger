@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'apps.invoices',
     'apps.associations',
     'apps.labels',
+    'core',
 ]
 
 MIDDLEWARE = [
