@@ -22,6 +22,7 @@
                                    x-ref="serialInput">
                             <button type="button" class="btn btn-outline-secondary d-md-none"
                                     style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
+                                    x-show="supported"
                                     @click="startScan" :disabled="scanning"
                                     aria-label="Escanear código de barras">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -33,12 +34,26 @@
                         <div class="form-text">Use o leitor de código de barras do celular ou digite manualmente.</div>
 
                         <!-- Scanner Modal -->
-                        <div x-show="scanning" x-cloak class="modal-overlay" @click.self="stopScan">
+                        <div x-show="scanning || error" x-cloak class="modal-overlay" @click.self="stopScan">
                             <div class="modal-card" style="max-width:480px">
-                                <h2 class="h5 mb-3" style="color:#FFFFFF">Escanear Código de Barras</h2>
-                                <div id="scanner-preview" style="width:100%;min-height:240px;background:#000;border-radius:12px;overflow:hidden"></div>
-                                <p class="text-muted small mt-2 mb-3">Aponte a câmera para o código de barras da etiqueta.</p>
-                                <button class="btn btn-outline-secondary" type="button" @click="stopScan">Cancelar</button>
+                                <template x-if="!error">
+                                    <div>
+                                        <h2 class="h5 mb-3" style="color:#FFFFFF">Escanear Código de Barras</h2>
+                                        <div id="scanner-preview" style="width:100%;min-height:240px;background:#000;border-radius:12px;overflow:hidden"></div>
+                                        <p class="text-muted small mt-2 mb-3">Aponte a câmera para o código de barras da etiqueta.</p>
+                                        <button class="btn btn-outline-secondary" type="button" @click="stopScan">Cancelar</button>
+                                    </div>
+                                </template>
+                                <template x-if="error">
+                                    <div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#EF4444" stroke-width="1.5" style="margin:0 auto 16px">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+                                        </svg>
+                                        <h2 class="h5 mb-2" style="color:#FFFFFF">Câmera indisponível</h2>
+                                        <p class="text-muted small mb-4" x-text="error"></p>
+                                        <button class="btn btn-outline-secondary" type="button" @click="error='';stopScan()">Fechar</button>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>

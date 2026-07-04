@@ -16,11 +16,17 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('barcodeScanner', () => ({
         scanning: false,
         scanner: null,
+        error: '',
+        get supported() {
+            return typeof Html5Qrcode !== 'undefined' && !!navigator.mediaDevices;
+        },
         async startScan() {
+            this.error = '';
             this.scanning = true;
-            this.$nextTick(() => {
+            await this.$nextTick();
+            try {
                 this.scanner = new Html5Qrcode('scanner-preview');
-                this.scanner.start(
+                await this.scanner.start(
                     { facingMode: 'environment' },
                     { fps: 10, qrbox: { width: 250, height: 150 } },
                     (decodedText) => {
@@ -29,8 +35,12 @@ document.addEventListener('alpine:init', () => {
                         this.stopScan();
                     },
                     () => {}
-                ).catch(() => { this.scanning = false; });
-            });
+                );
+            } catch (e) {
+                this.error = 'Não foi possível acessar a câmera. Verifique as permissões e tente novamente, ou digite o número manualmente.';
+                this.scanning = false;
+                if (this.scanner) { this.scanner.clear(); }
+            }
         },
         stopScan() {
             if (this.scanner) {
