@@ -58,6 +58,7 @@
                     </div>
                     <h5 class="card-title mt-2">{{ c.part_name }}</h5>
                     <p class="card-text small mb-0">Defeito: {{ c.defect }}</p>
+                    {% if c.serial_number %}<span class="badge bg-secondary mt-2">NS: {{ c.serial_number }}</span>{% endif %}
                 </div>
             </a>
         </div>

@@ -48,11 +48,12 @@ def service_call_new(request):
         call = ServiceCallService.create(
             technician=request.user,
             ticket_number=form.cleaned_data['ticket_number'],
+            serial_number=form.cleaned_data['serial_number'],
             part_name=form.cleaned_data['part_name'],
             defect=form.cleaned_data['defect'],
             date=form.cleaned_data['date'],
         )
-        messages.success(request, f'Atendimento {call.ticket_number} criado.')
+        messages.success(request, f'Peça com defeito {call.ticket_number} criada.')
         return redirect('services:service_call_list')
     return render(request, 'services/service_call_form.html', {
         'form': form, 'creating': True, 'today': today.isoformat(),
@@ -67,11 +68,12 @@ def service_call_edit(request, pk):
         ServiceCallService.update(
             call,
             ticket_number=form.cleaned_data['ticket_number'],
+            serial_number=form.cleaned_data['serial_number'],
             part_name=form.cleaned_data['part_name'],
             defect=form.cleaned_data['defect'],
             date=form.cleaned_data['date'],
         )
-        messages.success(request, 'Atendimento atualizado.')
+        messages.success(request, 'Peça com defeito atualizada.')
         return redirect('services:service_call_detail', pk=call.pk)
     return render(request, 'services/service_call_form.html', {'form': form, 'creating': False})
 

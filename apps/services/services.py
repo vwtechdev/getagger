@@ -18,23 +18,25 @@ class ServiceCallService:
         return ServiceCallRepository.get_for_technician(pk, technician)
 
     @staticmethod
-    def create(technician, *, ticket_number, part_name, defect, date=None):
+    def create(technician, *, ticket_number, serial_number='', part_name, defect, date=None):
         """Data automática PT-BR (default = hoje local)."""
         if date is None:
             date = timezone.localdate()
         return ServiceCallRepository.create(
             technician=technician,
             ticket_number=ticket_number,
+            serial_number=serial_number,
             part_name=part_name,
             defect=defect,
             date=date,
         )
 
     @staticmethod
-    def update(call, *, ticket_number, part_name, defect, date):
+    def update(call, *, ticket_number, serial_number='', part_name, defect, date):
         return ServiceCallRepository.update(
             call,
             ticket_number=ticket_number,
+            serial_number=serial_number,
             part_name=part_name,
             defect=defect,
             date=date,

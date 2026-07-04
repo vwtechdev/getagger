@@ -17,9 +17,10 @@ class ServiceCallServiceTest(TestCase):
     def test_create_sets_auto_date(self):
         """Data automática PT-BR (default = hoje local)."""
         call = ServiceCallService.create(
-            technician=self.tech_a, ticket_number='1', part_name='SSD', defect='x')
+            technician=self.tech_a, ticket_number='1', serial_number='SN001', part_name='SSD', defect='x')
         self.assertEqual(call.date, timezone.localdate())
         self.assertEqual(call.technician, self.tech_a)
+        self.assertEqual(call.serial_number, 'SN001')
 
     def test_isolation_by_technician(self):
         """RN-04: técnico B não vê atendimentos do técnico A."""
@@ -30,6 +31,12 @@ class ServiceCallServiceTest(TestCase):
 
     def test_get_for_technician_blocks_other(self):
         call = ServiceCallService.create(
-            technician=self.tech_a, ticket_number='1', part_name='SSD', defect='x')
+            technician=self.tech_a, ticket_number='1', serial_number='SN002', part_name='SSD', defect='x')
         with self.assertRaises(Exception):
             ServiceCallService.get_for_technician(call.pk, self.tech_b)
+
+    def test_serial_number_optional(self):
+        """serial_number pode ser vazio por padrão."""
+        call = ServiceCallService.create(
+            technician=self.tech_a, ticket_number='2', part_name='HD', defect='y')
+        self.assertEqual(call.serial_number, '')

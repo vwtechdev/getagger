@@ -64,6 +64,6 @@ def label_settings(request):
     form = LabelSettingsForm(request.POST or None, instance=settings)
     if form.is_valid():
         form.save()
-        messages.success(request, 'Configurações salvas.')
+        messages.success(request, 'Configurações Salvas')
         return redirect('labels:label_settings')
     return render(request, 'labels/label_settings.html', {'form': form})

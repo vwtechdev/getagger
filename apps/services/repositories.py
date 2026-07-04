@@ -12,18 +12,20 @@ class ServiceCallRepository:
         return ServiceCallRepository.for_technician(technician).get(pk=pk)
 
     @staticmethod
-    def create(technician, *, ticket_number, part_name, defect, date=None):
+    def create(technician, *, ticket_number, serial_number='', part_name, defect, date=None):
         return ServiceCall.objects.create(
             technician=technician,
             ticket_number=ticket_number,
+            serial_number=serial_number,
             part_name=part_name,
             defect=defect,
             date=date,
         )
 
     @staticmethod
-    def update(call, *, ticket_number, part_name, defect, date=None):
+    def update(call, *, ticket_number, serial_number='', part_name, defect, date=None):
         call.ticket_number = ticket_number
+        call.serial_number = serial_number
         call.part_name = part_name
         call.defect = defect
         if date is not None:

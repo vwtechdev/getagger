@@ -1,6 +1,6 @@
 # Getagger
 
-Getagger é uma aplicação web desenvolvida em Django para automatizar o processo dos técnicos da Wyntech Serviços em Tecnologia da Informação, com objetivo principal de gerar etiquetas para devolução de peças com defeito para o estoque conforme padrões do estoque da empresa.
+Getagger é uma aplicação web desenvolvida em Django para automatizar o processo dos técnicos da Wyntech Serviços em Tecnologia da Informação, com objetivo principal de gerar etiquetas para devolução de peças com defeito conforme padrões do estoque da empresa.
 
 ## Funcionalidades
 

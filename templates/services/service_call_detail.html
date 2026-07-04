@@ -17,6 +17,8 @@
                 <dd class="col-sm-9">{{ call.ticket_number }}</dd>
                 <dt class="col-sm-3">Data</dt>
                 <dd class="col-sm-9">{{ call.date|date:"d/m/Y" }}</dd>
+                <dt class="col-sm-3">Nº de Série</dt>
+                <dd class="col-sm-9">{{ call.serial_number|default:"—" }}</dd>
                 <dt class="col-sm-3">Técnico</dt>
                 <dd class="col-sm-9">{{ call.technician.name }}</dd>
                 <dt class="col-sm-3">Nome da Peça</dt>

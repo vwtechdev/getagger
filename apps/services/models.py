@@ -18,6 +18,7 @@ class ServiceCall(BaseModel):
         verbose_name='Técnico',
     )
     ticket_number = models.CharField(max_length=100, verbose_name='Número do chamado')
+    serial_number = models.CharField(max_length=100, blank=True, default='', verbose_name='Número de Série')
     date = models.DateField(default=timezone.localdate, verbose_name='Data')
     part_name = models.CharField(max_length=150, verbose_name='Nome da peça')
     defect = models.CharField(max_length=255, verbose_name='Defeito')

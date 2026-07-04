@@ -12,6 +12,36 @@
                         {{ form.ticket_number }}
                         {% if form.ticket_number.errors %}<div class="text-danger small">{{ form.ticket_number.errors }}</div>{% endif %}
                     </div>
+                    <div class="mb-3" x-data="barcodeScanner">
+                        <label class="form-label" for="id_serial_number">Número de Série</label>
+                        <div class="input-group">
+                            <input type="text" name="serial_number" id="id_serial_number"
+                                   class="form-control" placeholder="Escaneie ou digite o nº de série"
+                                   inputmode="url" autocomplete="off"
+                                   value="{{ form.serial_number.value|default:'' }}"
+                                   x-ref="serialInput">
+                            <button type="button" class="btn btn-outline-secondary d-md-none"
+                                    style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
+                                    @click="startScan" :disabled="scanning"
+                                    aria-label="Escanear código de barras">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                                </svg>
+                            </button>
+                        </div>
+                        {% if form.serial_number.errors %}<div class="text-danger small">{{ form.serial_number.errors }}</div>{% endif %}
+                        <div class="form-text">Use o leitor de código de barras do celular ou digite manualmente.</div>
+
+                        <!-- Scanner Modal -->
+                        <div x-show="scanning" x-cloak class="modal-overlay" @click.self="stopScan">
+                            <div class="modal-card" style="max-width:480px">
+                                <h2 class="h5 mb-3" style="color:#FFFFFF">Escanear Código de Barras</h2>
+                                <div id="scanner-preview" style="width:100%;min-height:240px;background:#000;border-radius:12px;overflow:hidden"></div>
+                                <p class="text-muted small mt-2 mb-3">Aponte a câmera para o código de barras da etiqueta.</p>
+                                <button class="btn btn-outline-secondary" type="button" @click="stopScan">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label" for="id_part_name">Nome da peça</label>
                         {{ form.part_name }}
