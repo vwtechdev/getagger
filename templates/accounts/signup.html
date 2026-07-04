@@ -3,12 +3,17 @@
 {% block navbar %}{% endblock %}
 {% block title %}Criar conta — Getagger{% endblock %}
 {% block content %}
+<style>body{overflow:hidden}</style>
 <div class="row justify-content-center align-items-center" style="min-height:100vh;margin:0">
     <div class="col-md-6 col-lg-5">
         <div class="card" style="border:1px solid #1E293B">
             <div class="card-body">
-                <div class="text-center mb-4">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
                     <img src="{% static 'img/logo.png' %}" alt="Getagger" height="72">
+                    <div>
+                        <div class="fs-3 fw-semibold lh-1 mb-0">Getagger</div>
+                        <small class="text-muted" style="font-size:0.75rem">Gerador de Etiquetas de Defeito</small>
+                    </div>
                 </div>
                 <form method="post">
                     {% csrf_token %}

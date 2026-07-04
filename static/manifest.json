@@ -1,0 +1,23 @@
+{
+  "name": "Getagger — Gerador de Etiquetas de Defeito",
+  "short_name": "Getagger",
+  "description": "Gerador de Etiquetas de Defeito",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#020817",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/static/img/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

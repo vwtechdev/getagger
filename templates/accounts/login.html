@@ -3,12 +3,17 @@
 {% block navbar %}{% endblock %}
 {% block title %}Entrar — Getagger{% endblock %}
 {% block content %}
+<style>body{overflow:hidden}</style>
 <div class="row justify-content-center align-items-center" style="min-height:100vh;margin:0">
     <div class="col-md-5 col-lg-4">
         <div class="card" style="border:1px solid #1E293B">
             <div class="card-body">
-                <div class="text-center mb-4">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
                     <img src="{% static 'img/logo.png' %}" alt="Getagger" height="72">
+                    <div>
+                        <div class="fs-3 fw-semibold lh-1 mb-0">Getagger</div>
+                        <small class="text-muted" style="font-size:0.75rem">Gerador de Etiquetas de Defeito</small>
+                    </div>
                 </div>
                 <form method="post">
                     {% csrf_token %}
@@ -17,12 +22,12 @@
                     {% endif %}
                     <div class="mb-3">
                         <label class="form-label" for="id_username">E-mail</label>
-                        <input type="email" name="username" autofocus class="form-control" id="id_username" required>
+                        <input type="email" name="username" autofocus class="form-control" id="id_username" placeholder="seu@email.com" required>
                     </div>
                     <div class="mb-3" x-data="{ showPassword: false, pwInput: null }" x-init="pwInput = document.getElementById('id_password')">
                         <label class="form-label" for="id_password">Senha</label>
                         <div class="input-group">
-                            <input type="password" name="password" class="form-control" id="id_password" required>
+                            <input type="password" name="password" class="form-control" id="id_password" placeholder="••••••••" required>
                             <button type="button" class="btn btn-outline-secondary"
                                     @click="showPassword = !showPassword; pwInput.type = showPassword ? 'text' : 'password'"
                                     style="border-top-left-radius:0;border-bottom-left-radius:0;display:inline-flex;align-items:center;justify-content:center;gap:4px"
