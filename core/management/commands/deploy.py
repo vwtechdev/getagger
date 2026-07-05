@@ -23,16 +23,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         _log('Deploy iniciado')
         base = settings.BASE_DIR
-        venv = getattr(settings, 'DEPLOY_VENV_PATH', '/home/getagger/.virtualenvs/venv')
-        pip = f'{venv}/bin/pip'
-        python = f'{venv}/bin/python'
 
         cmds = [
             (['git', '-C', str(base), 'pull', 'origin', 'main'], 'git pull'),
-            ([pip, 'install', '-r', f'{base}/requirements.txt'], 'pip install'),
-            ([python, 'manage.py', 'collectstatic', '--noinput'], 'collectstatic'),
-            ([python, 'manage.py', 'makemigrations'], 'makemigrations'),
-            ([python, 'manage.py', 'migrate'], 'migrate'),
+            (['pip', 'install', '-r', f'{base}/requirements.txt'], 'pip install'),
+            (['python', 'manage.py', 'collectstatic', '--noinput'], 'collectstatic'),
+            (['python', 'manage.py', 'makemigrations'], 'makemigrations'),
+            (['python', 'manage.py', 'migrate'], 'migrate'),
         ]
         for cmd, label in cmds:
             self.stdout.write(f'[{label}]...', ending=' ')
