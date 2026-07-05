@@ -185,3 +185,6 @@ docker-compose.yml
 # Local Docs
 docs/
 mkdocs.yml
+
+# Deploy log (servidor, não versionar)
+deploy.log

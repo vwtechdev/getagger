@@ -17,10 +17,48 @@ document.addEventListener('alpine:init', () => {
         scanning: false,
         scanner: null,
         error: '',
+        cameraState: 'prompt',
+        permissionPending: false,
         get supported() {
             return typeof Html5Qrcode !== 'undefined';
         },
+        async init() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                this.cameraState = 'unsupported';
+                return;
+            }
+            if (navigator.permissions && navigator.permissions.query) {
+                try {
+                    const result = await navigator.permissions.query({ name: 'camera' });
+                    this.cameraState = result.state;
+                    result.addEventListener('change', () => {
+                        this.cameraState = result.state;
+                    });
+                } catch {
+                    // Permissions API unavailable — fall through to getUserMedia probe
+                }
+            }
+            if (this.cameraState === 'prompt') {
+                this.permissionPending = true;
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment' }
+                    });
+                    stream.getTracks().forEach(t => t.stop());
+                    this.cameraState = 'granted';
+                } catch {
+                    this.cameraState = 'denied';
+                }
+                this.permissionPending = false;
+            }
+        },
         async startScan() {
+            if (this.permissionPending) return;
+            if (this.cameraState === 'denied') {
+                this.error = 'Permissão de câmera negada. Para escanear, ative a câmera nas configurações do navegador para este site.';
+                this.scanning = true;
+                return;
+            }
             this.error = '';
             this.scanning = true;
             await this.$nextTick();
