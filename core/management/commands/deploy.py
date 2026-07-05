@@ -9,7 +9,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 LOG_FILE = settings.BASE_DIR / 'deploy.log'
-
+pa_user = config('PA_USERNAME', default=None)
 
 def _log(msg, level='INFO'):
     ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -23,7 +23,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         _log('Deploy iniciado')
         base = settings.BASE_DIR
-
         cmds = [
             (['git', '-C', str(base), 'pull', 'origin', 'main'], 'git pull'),
             (['pip', 'install', '-r', f'{base}/requirements.txt'], 'pip install'),
@@ -51,7 +50,6 @@ class Command(BaseCommand):
 
     def _reload(self):
         pa_token = config('PA_API_TOKEN', default=None)
-        pa_user = config('PA_USERNAME', default=None)
         if not pa_token or not pa_user:
             self.stdout.write(self.style.WARNING('[reload web app] SKIP (PA_API_TOKEN/PA_USERNAME not set)'))
             _log('reload web app: SKIP (env vars not set)', 'WARNING')
