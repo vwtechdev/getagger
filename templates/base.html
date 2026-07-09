@@ -24,8 +24,8 @@
         {% if request.user.is_authenticated %}
         <div class="d-none d-lg-flex align-items-center flex-grow-1 ms-4">
             <ul class="navbar-nav me-auto flex-row gap-1">
-                <li class="nav-item"><a class="nav-link" href="{% url 'services:service_call_list' %}">Peças com Defeito</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'invoices:invoice_list' %}">Notas Fiscais</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'services:service_call_list' %}">Peças com Defeito</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'labels:reprint' %}">Reimprimir</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'labels:label_settings' %}">Configurações</a></li>
             </ul>

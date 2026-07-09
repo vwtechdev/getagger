@@ -5,7 +5,7 @@ from apps.labels.models import InvoiceLabel, LabelSettings, PartLabel
 
 @admin.register(PartLabel)
 class PartLabelAdmin(admin.ModelAdmin):
-    list_display = ('association', 'created_at')
+    list_display = ('service_call', 'created_at')
 
 
 @admin.register(InvoiceLabel)

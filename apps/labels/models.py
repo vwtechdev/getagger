@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from apps.associations.models import Association
+from apps.services.models import ServiceCall
 from apps.invoices.models import Invoice
 from core.models import BaseModel
 
@@ -9,10 +9,12 @@ from core.models import BaseModel
 class PartLabel(BaseModel):
     """Etiqueta de peça (1 por peça) — RF-06."""
 
-    association = models.OneToOneField(
-        Association,
+    service_call = models.OneToOneField(
+        ServiceCall,
         on_delete=models.CASCADE,
-        verbose_name='Associação',
+        null=True,
+        blank=True,
+        verbose_name='Peça com defeito',
     )
 
     class Meta:
@@ -20,12 +22,10 @@ class PartLabel(BaseModel):
         verbose_name_plural = 'Etiquetas de peças'
 
     def __str__(self):
-        return f'Etiqueta — {self.association}'
+        return f'Etiqueta — {self.service_call}'
 
 
 class InvoiceLabel(BaseModel):
-    """Etiqueta romaneio (1 por volume) — RN-11/RN-12. ``volume_index`` de 1..N."""
-
     invoice = models.ForeignKey(
         Invoice,
         on_delete=models.CASCADE,
@@ -50,8 +50,6 @@ class InvoiceLabel(BaseModel):
 
 
 class LabelSettings(BaseModel):
-    """Configuração de impressão de etiquetas por técnico."""
-
     PAGE_FORMATS = [
         ('A4', 'A4'),
         ('THERMAL_80MM', 'Bobina 80mm'),

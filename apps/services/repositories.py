@@ -1,4 +1,3 @@
-"""Repository — acesso a dados isolado por técnico (RN-04)."""
 from apps.services.models import ServiceCall
 
 
@@ -12,7 +11,7 @@ class ServiceCallRepository:
         return ServiceCallRepository.for_technician(technician).get(pk=pk)
 
     @staticmethod
-    def create(technician, *, ticket_number, serial_number='', part_name, defect, date=None):
+    def create(technician, *, ticket_number='', serial_number='', part_name, defect='', date=None, source_invoice_number='', quantity=1):
         return ServiceCall.objects.create(
             technician=technician,
             ticket_number=ticket_number,
@@ -20,10 +19,12 @@ class ServiceCallRepository:
             part_name=part_name,
             defect=defect,
             date=date,
+            source_invoice_number=source_invoice_number,
+            quantity=quantity,
         )
 
     @staticmethod
-    def update(call, *, ticket_number, serial_number='', part_name, defect, date=None):
+    def update(call, *, ticket_number='', serial_number='', part_name, defect='', date=None):
         call.ticket_number = ticket_number
         call.serial_number = serial_number
         call.part_name = part_name

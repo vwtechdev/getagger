@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.services.forms import ServiceCallForm
+from apps.services.models import ServiceCall
 from apps.services.services import ServiceCallService
 
 
@@ -43,17 +44,23 @@ def service_call_list(request):
 @login_required
 def service_call_new(request):
     today = timezone.localdate()
-    form = ServiceCallForm(request.POST or None, initial={'date': today})
+    form = ServiceCallForm(request.POST or None, initial={'date': today}, technician=request.user)
     if form.is_valid():
-        call = ServiceCallService.create(
+        quantity = form.cleaned_data.get('quantity') or 1
+        kwargs = dict(
             technician=request.user,
             ticket_number=form.cleaned_data['ticket_number'],
             serial_number=form.cleaned_data['serial_number'],
-            part_name=form.cleaned_data['part_name'],
+            part_name=form.cleaned_data['part_name'].upper(),
             defect=form.cleaned_data['defect'],
             date=form.cleaned_data['date'],
+            source_invoice_number=form.cleaned_data.get('source_invoice_number', ''),
+            quantity=1,
         )
-        messages.success(request, f'Peça com defeito {call.ticket_number} criada.')
+        call = ServiceCallService.create(**kwargs)
+        for _ in range(quantity - 1):
+            ServiceCallService.create(**kwargs)
+        messages.success(request, f'{quantity} peça(s) {call.part_name} criada(s).')
         return redirect('services:service_call_list')
     return render(request, 'services/service_call_form.html', {
         'form': form, 'creating': True, 'today': today.isoformat(),
@@ -63,21 +70,23 @@ def service_call_new(request):
 @login_required
 def service_call_edit(request, pk):
     call = ServiceCallService.get_for_technician(pk, request.user)
-    form = ServiceCallForm(request.POST or None, instance=call)
+@login_required
+def service_call_edit(request, pk):
+    call = ServiceCallService.get_for_technician(pk, request.user)
+    form = ServiceCallForm(request.POST or None, instance=call, technician=request.user)
     if form.is_valid():
-        ServiceCallService.update(
-            call,
-            ticket_number=form.cleaned_data['ticket_number'],
-            serial_number=form.cleaned_data['serial_number'],
-            part_name=form.cleaned_data['part_name'],
-            defect=form.cleaned_data['defect'],
-            date=form.cleaned_data['date'],
-        )
+        ticket = form.cleaned_data['ticket_number']
+        serial = form.cleaned_data['serial_number']
+        part_name = form.cleaned_data['part_name']
+        defect = form.cleaned_data['defect']
+        date = form.cleaned_data['date']
+        ServiceCallService.update(call, ticket_number=ticket, serial_number=serial, part_name=part_name, defect=defect, date=date)
+        if call.status == 'new':
+            call.status = 'attended'
+            call.save(update_fields=['status'])
         messages.success(request, 'Peça com defeito atualizada.')
-        return redirect('services:service_call_detail', pk=call.pk)
+        return redirect('services:service_call_list')
     return render(request, 'services/service_call_form.html', {'form': form, 'creating': False})
-
-
 @login_required
 @require_POST
 def service_call_delete(request, pk):
@@ -88,10 +97,3 @@ def service_call_delete(request, pk):
     except Exception as exc:
         messages.error(request, f'Erro ao excluir: {exc}')
     return redirect('services:service_call_list')
-
-
-@login_required
-def service_call_detail(request, pk):
-    call = ServiceCallService.get_for_technician(pk, request.user)
-    association = getattr(call, 'association', None)
-    return render(request, 'services/service_call_detail.html', {'call': call, 'association': association})

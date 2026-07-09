@@ -5,18 +5,20 @@ from core.models import BaseModel
 
 
 class Invoice(BaseModel):
-    """Nota fiscal importada (PDF). RN-04: isolada por técnico.
-
-    O PDF NÃO é persistido — usado apenas para extração do conteúdo.
-    """
+    TYPE_CHOICES = [
+        ('outgoing', 'Saída'),
+        ('incoming', 'Entrada'),
+    ]
 
     technician = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         verbose_name='Técnico',
     )
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='outgoing', verbose_name='Tipo')
     number = models.CharField(max_length=50, verbose_name='NF-e número')
-    return_code = models.CharField(max_length=50, verbose_name='Código de devolução')
+    return_code = models.CharField(max_length=50, blank=True, default='', verbose_name='Código de devolução')
+    return_refs = models.CharField(max_length=500, blank=True, default='', verbose_name='RETORNO REF. NF')
     volumes = models.PositiveIntegerField(default=1, verbose_name='Volumes')
 
     class Meta:
@@ -25,12 +27,13 @@ class Invoice(BaseModel):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'NF-e {self.number} ({self.return_code})'
+        tipo = self.get_type_display()
+        if self.type == 'incoming':
+            return f'NF-e {self.number} ({self.return_code}) — {tipo}'
+        return f'NF-e {self.number} — {tipo}'
 
 
 class InvoiceItem(BaseModel):
-    """Item extraído da tabela 'DADOS DOS PRODUTOS / SERVIÇOS' (CÓD. PROD + DESCRIÇÃO)."""
-
     invoice = models.ForeignKey(
         Invoice,
         on_delete=models.CASCADE,
@@ -39,6 +42,7 @@ class InvoiceItem(BaseModel):
     )
     product_code = models.CharField(max_length=50, verbose_name='Código do produto')
     description = models.CharField(max_length=500, verbose_name='Descrição')
+    quantity = models.PositiveIntegerField(default=1, verbose_name='Quantidade')
 
     class Meta:
         verbose_name = 'Item da nota fiscal'

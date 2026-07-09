@@ -1,18 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
+<div x-data="{ showDelete: false }">
 <div class="row justify-content-center">
     <div class="col-md-7 col-lg-6">
         <div class="card shadow-sm">
             <div class="card-body">
-                <form method="post">
+                <form method="post" x-data="barcodeScanner">
                     {% csrf_token %}
                     {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+                    {% if creating %}
+                    <div class="mb-3">
+                        <label class="form-label" for="id_part_name">Nome da peça</label>
+                        {{ form.part_name }}
+                        {% if form.part_name.errors %}<div class="text-danger small">{{ form.part_name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="id_source_invoice_number">Número da NF de saída</label>
+                        {{ form.source_invoice_number }}
+                        <div class="form-text">Opcional — informe se esta peça veio de uma NF de saída.</div>
+                        {% if form.source_invoice_number.errors %}<div class="text-danger small">{{ form.source_invoice_number.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="id_quantity">Quantidade</label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}<div class="text-danger small">{{ form.quantity.errors }}</div>{% endif %}
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label class="form-label">Peça</label>
+                        <input type="text" class="form-control" value="{{ form.part_name.value|default:'' }}" {% if form.fields.part_name.widget.attrs.readonly %}readonly{% endif %}>
+                        <input type="hidden" name="part_name" value="{{ form.part_name.value|default:'' }}">
+                    </div>
+                    {% endif %}
+
                     <div class="mb-3">
                         <label class="form-label" for="id_ticket_number">Número do chamado</label>
                         {{ form.ticket_number }}
                         {% if form.ticket_number.errors %}<div class="text-danger small">{{ form.ticket_number.errors }}</div>{% endif %}
                     </div>
-                    <div class="mb-3" x-data="barcodeScanner">
+                    <div class="mb-3">
                         <label class="form-label" for="id_serial_number">Número de Série</label>
                         <div class="serial-wrapper">
                             <input type="text" name="serial_number" id="id_serial_number"
@@ -32,8 +59,6 @@
                         </div>
                         {% if form.serial_number.errors %}<div class="text-danger small">{{ form.serial_number.errors }}</div>{% endif %}
                         <div class="form-text">Use o leitor de código de barras do celular ou digite manualmente.</div>
-
-                        <!-- Scanner Modal -->
                         <div x-show="scanning || error" x-cloak class="modal-overlay" @click.self="stopScan">
                             <div class="modal-card" style="max-width:480px">
                                 <template x-if="!error">
@@ -58,12 +83,6 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="id_part_name">Nome da peça</label>
-                        {{ form.part_name }}
-                        <div class="form-text">Finalidade exclusivamente visual (drag &amp; drop).</div>
-                        {% if form.part_name.errors %}<div class="text-danger small">{{ form.part_name.errors }}</div>{% endif %}
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label" for="id_defect">Defeito</label>
                         {{ form.defect }}
                         {% if form.defect.errors %}<div class="text-danger small">{{ form.defect.errors }}</div>{% endif %}
@@ -77,10 +96,75 @@
                     <div class="d-flex gap-2">
                         <button class="btn btn-primary" type="submit">Salvar</button>
                         <a href="{% url 'services:service_call_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        {% if not creating %}
+                        <button type="button" class="btn btn-outline-danger ms-auto"
+                                style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
+                                @click="showDelete = true"
+                                aria-label="Excluir">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            Excluir
+                        </button>
+                        {% endif %}
                     </div>
                 </form>
+
+                {% if not creating %}
+                <div x-show="showDelete" x-cloak class="modal-overlay" @click.self="showDelete = false">
+                    <div class="modal-card">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#EF4444" stroke-width="1.5" style="margin:0 auto 16px">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                        </svg>
+                        <h2 class="h5 mb-2" style="color:#FFFFFF">Excluir Peça com Defeito?</h2>
+                        <p class="text-muted small mb-4">Esta ação não pode ser desfeita.</p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <form method="post" action="{% url 'services:service_call_delete' pk=form.instance.pk %}" style="display:inline">
+                                {% csrf_token %}
+                                <button class="btn btn-danger" type="submit">Sim, excluir</button>
+                            </form>
+                            <button class="btn btn-outline-secondary" type="button" @click="showDelete = false">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function barcodeScanner() {
+    return {
+        supported: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
+        scanning: false,
+        error: '',
+        codeReader: null,
+
+        async startScan() {
+            this.error = '';
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const video = document.getElementById('scanner-preview');
+                video.srcObject = stream;
+                this.scanning = true;
+            } catch (e) {
+                this.error = e.message || 'Não foi possível acessar a câmera.';
+            }
+        },
+
+        stopScan() {
+            this.scanning = false;
+            const video = document.getElementById('scanner-preview');
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(t => t.stop());
+                video.srcObject = null;
+            }
+        },
+    };
+}
+</script>
 {% endblock %}

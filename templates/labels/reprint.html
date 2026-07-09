@@ -60,10 +60,16 @@
                         <span class="mx-1">·</span>
                         {{ n.items.count }} item{{ n.items.count|pluralize }}
                     </div>
+                    {% if n.num_calls %}
                     <div class="mt-auto pt-3 d-flex gap-2 justify-content-end border-top border-secondary">
                         <a href="{% url 'labels:part_labels_pdf' pk=n.pk %}" target="_blank" class="btn btn-sm btn-outline-success">Peças (PDF)</a>
                         <a href="{% url 'invoices:invoice_labels_pdf' pk=n.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary">Romaneio (PDF)</a>
                     </div>
+                    {% else %}
+                    <div class="mt-auto pt-3 text-muted small text-center border-top border-secondary">
+                        Nenhuma peça vinculada
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

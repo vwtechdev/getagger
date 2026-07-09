@@ -11,6 +11,23 @@
                       @submit="submitting = true">
                     {% csrf_token %}
 
+                    <div class="mb-3">
+                        <label class="form-label" for="id_tipo">Tipo de Nota Fiscal</label>
+                        <select name="tipo" id="id_tipo" class="form-control" x-model="tipo">
+                            <option value="outgoing">NF de Saída</option>
+                            <option value="incoming">NF de Entrada</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <div x-show="tipo === 'outgoing'" class="alert alert-info py-2 mb-0" style="font-size:0.9rem">
+                            <strong>NF de Saída:</strong> Peças novas, importar nota fiscal da saída do estoque da empresa.
+                        </div>
+                        <div x-show="tipo === 'incoming'" class="alert alert-warning py-2 mb-0" style="font-size:0.9rem">
+                            <strong>NF de Entrada:</strong> Peças com defeito, importar nota fiscal para entrada do estoque da empresa.
+                        </div>
+                    </div>
+
                     <div class="mb-4">
                         <label class="form-label">Arquivo PDF</label>
                         <div class="drop-zone"
@@ -55,21 +72,7 @@
                         {% if form.arquivo.errors %}<div class="text-danger small mt-1">{{ form.arquivo.errors }}</div>{% endif %}
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label" for="id_volumes">{{ form.volumes.label }}</label>
-                        <div class="d-flex flex-column flex-sm-row align-items-center gap-2 gap-sm-3">
-                            <div class="stepper">
-                                <button type="button" @click="volumes = Math.max(1, volumes - 1)" :disabled="volumes <= 1">−</button>
-                                <input type="number" name="volumes" id="id_volumes"
-                                       x-model.number="volumes"
-                                       min="1" value="1">
-                                <button type="button" @click="volumes = volumes + 1">+</button>
-                            </div>
-                            <span class="text-muted small" x-text="volumesLabel"></span>
-                        </div>
-                        <div class="form-text">{{ form.volumes.help_text }}</div>
-                        {% if form.volumes.errors %}<div class="text-danger small mt-1">{{ form.volumes.errors }}</div>{% endif %}
-                    </div>
+                    
 
                     <div x-show="file" x-cloak class="mb-4">
                         <label class="form-label">Pré-visualização</label>
@@ -102,9 +105,9 @@ function importForm() {
     return {
         file: null,
         previewUrl: '',
-        volumes: 1,
         dragging: false,
         submitting: false,
+        tipo: 'outgoing',
 
         get fileSize() {
             if (!this.file) return '';
@@ -112,12 +115,6 @@ function importForm() {
             if (bytes < 1024) return bytes + ' B';
             if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
             return (bytes / 1048576).toFixed(1) + ' MB';
-        },
-
-        get volumesLabel() {
-            const v = this.volumes;
-            if (v === 1) return '1 volume → 1 etiqueta romaneio';
-            return v + ' volumes → ' + v + ' etiquetas romaneio (1/' + v + '..' + v + '/' + v + ')';
         },
 
         handleFile(f) {
@@ -132,7 +129,6 @@ function importForm() {
             this.dragging = false;
             const f = e.dataTransfer.files[0];
             if (!f) return;
-            // Sync file input for Django form
             const input = document.getElementById('pdf-upload');
             const dt = new DataTransfer();
             dt.items.add(f);

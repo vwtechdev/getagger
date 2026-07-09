@@ -13,21 +13,58 @@
 
     <div class="card shadow-sm mb-3">
         <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h2 class="h4 mb-0">NF-e {{ invoice.number }}</h2>
+                <span class="badge {% if invoice.type == 'incoming' %}bg-success{% else %}bg-info{% endif %} fs-6">
+                    {{ invoice.get_type_display }}
+                </span>
+            </div>
             <dl class="row mb-0 dl flex-grow-1">
-                <dt class="col-sm-3">NF-e</dt><dd class="col-sm-9">{{ invoice.number }}</dd>
-                <dt class="col-sm-3">Romaneio</dt><dd class="col-sm-9">{{ invoice.return_code }}</dd>
-                <dt class="col-sm-3">Volumes</dt><dd class="col-sm-9">{{ invoice.volumes }}</dd>
-                <dt class="col-sm-3">Importada em</dt><dd class="col-sm-9">{{ invoice.created_at|date:"d/m/Y H:i" }}</dd>
+                {% if invoice.type == 'incoming' %}
+                <dt class="col-sm-3">Romaneio</dt>
+                <dd class="col-sm-9">{{ invoice.return_code }}</dd>
+                <dt class="col-sm-3">Volumes</dt>
+                <dd class="col-sm-9">{{ invoice.volumes }}</dd>
+                {% if invoice.return_refs %}
+                <dt class="col-sm-3">NFs relacionadas</dt>
+                <dd class="col-sm-9">{{ invoice.return_refs }}</dd>
+                {% endif %}
+                {% endif %}
+                <dt class="col-sm-3">Importada em</dt>
+                <dd class="col-sm-9">{{ invoice.created_at|date:"d/m/Y H:i" }}</dd>
             </dl>
             <div class="d-flex justify-content-end gap-2 pt-3 mt-3 border-top border-secondary">
-                <a href="{% url 'associations:association' pk=invoice.pk %}"
-                   class="btn btn-primary btn-sm"
+                {% if invoice.type == 'incoming' and calls %}
+                <a href="{% url 'labels:part_labels_pdf' pk=invoice.pk %}" target="_blank"
+                   class="btn btn-success btn-sm"
                    style="display:inline-flex;align-items:center;justify-content:center;gap:4px">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                        <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
                     </svg>
-                    Associar peças
+                    Etiquetas
                 </a>
+                <a href="{% url 'invoices:invoice_labels_pdf' pk=invoice.pk %}" target="_blank"
+                   class="btn btn-outline-secondary btn-sm"
+                   style="display:inline-flex;align-items:center;justify-content:center;gap:4px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Romaneio
+                </a>
+                {% endif %}
+                {% if invoice.type == 'incoming' and invoice.return_refs %}
+                <form method="post" action="{% url 'invoices:invoice_reassociate' pk=invoice.pk %}" style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-info"
+                            style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
+                            title="Associar automaticamente peças cadastradas manualmente que possuem NF relacionadas.">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        Auto-Match
+                    </button>
+                </form>
+                {% endif %}
                 <button type="button"
                         class="btn btn-sm btn-outline-danger"
                         style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
@@ -41,26 +78,44 @@
         </div>
     </div>
 
+    {% if invoice.type == 'incoming' and calls %}
+    <h2 class="h5 mt-4">Peças vinculadas</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
+        {% for c in calls %}
+        <div class="col">
+            <a href="{% url 'services:service_call_edit' pk=c.pk %}" class="card card-call h-100 text-decoration-none">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ c.part_name }}</h5>
+                    <p class="card-text small mb-0">Defeito: {{ c.defect|default:"—" }}</p>
+                    <small class="text-muted mt-2 d-block text-end">{{ c.date|date:"d/m/Y" }}</small>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <h2 class="h5 mt-4">Itens da NF</h2>
     <div class="table-responsive">
         <table class="table table-sm table-striped align-middle">
-            <thead><tr><th>CÓD. PROD</th><th>DESCRIÇÃO</th></tr></thead>
+            <thead><tr><th>CÓD. PROD</th><th>DESCRIÇÃO</th><th class="text-end">QTD</th></tr></thead>
             <tbody>
                 {% for item in items %}
-                <tr><td>{{ item.product_code }}</td><td>{{ item.description }}</td></tr>
+                <tr><td>{{ item.product_code }}</td><td>{{ item.description }}</td><td class="text-end">{{ item.quantity }}</td></tr>
+                {% empty %}
+                <tr><td colspan="3" class="text-muted text-center">Nenhum item.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div x-show="showDelete" x-cloak class="modal-overlay" @click.self="showDelete = false">
         <div class="modal-card">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#EF4444" stroke-width="1.5" style="margin:0 auto 16px">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
             </svg>
             <h2 class="h5 mb-2" style="color:#FFFFFF">Excluir Nota Fiscal?</h2>
-            <p class="text-muted small mb-4">Esta ação não pode ser desfeita. Peças com defeito associadas serão liberados.</p>
+            <p class="text-muted small mb-4">Esta ação não pode ser desfeita.</p>
             <div class="d-flex gap-2 justify-content-center">
                 <form method="post" action="{% url 'invoices:invoice_delete' pk=invoice.pk %}" style="display:inline">
                     {% csrf_token %}

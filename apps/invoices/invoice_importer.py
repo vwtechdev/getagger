@@ -1,29 +1,30 @@
 """Importação de Nota Fiscal (PDF) — pdfplumber.
 
-Regras (PRD):
-- RN-13: extração FIXA de rótulos do DANFE:
-    * Número da NF-e: campo "NÚMERO" do cabeçalho do DANFE
-      (bloco "NÚMERO <n> ... SÉRIE ... DANFE").
-    * Código de Devolução (Romaneio): "Observacao: Codigo Devolucao: XXXX".
-  Não inferir/variar rótulos.
-- Tabela "DADOS DOS PRODUTOS / SERVIÇOS": extrair SOMENTE CÓD. PROD e DESCRIÇÃO.
-- Sem OCR quando o PDF possuir texto pesquisável.
-- RN-05: NENHUMA comparação/matching com nome da peça.
-- O PDF NÃO é persistido — apenas extraído o conteúdo.
+Suporta dois tipos de NF:
+  - outgoing (NF de saída): extrai NÚMERO + itens (CÓD. PROD, DESCRIÇÃO, QUANTIDADE)
+  - incoming (NF de entrada): extrai NÚMERO + TRANSPORTADOR/VOLUME (quantidade)
+    + itens (CÓD. PROD, DESCRIÇÃO, QUANTIDADE) + Codigo Devolucao + RETORNO REF. NF
 """
 import re
 
 import pdfplumber
 
-# Rótulos fixos (RN-13) — jamais variar.
-# Número da NF-e: campo "NÚMERO" do cabeçalho do DANFE, seguido de SÉRIE e DANFE.
 NUMBER_RE = re.compile(
     r'NÚMERO\s+(\d+)(?:\s+\d+)?\s*\n\s*\d*\s*\n?\s*SÉRIE\s*\n?\s*DANFE',
     re.IGNORECASE,
 )
-# Código de Devolução (Romaneio): rótulo fixo no campo de observações.
 RETURN_CODE_RE = re.compile(
     r'Observacao:\s*Codigo Devolucao:\s*([^\s\n]+)', re.IGNORECASE
+)
+RETORNO_REF_RE = re.compile(
+    r'RETORNO\s*REF\.{0,2}\s*NF\.{0,3}:?\s*([\d\s/\-]+)', re.IGNORECASE
+)
+TRANSPORTADOR_QTD_RE = re.compile(
+    r'TRANSPORTADOR\s*/\s*VOLUME.*?QUANTIDADE\s*\n?\s*(\d+)', re.IGNORECASE | re.DOTALL
+)
+# Fallback: extrair QUANTIDADE da row da tabela TRANSPORTADOR
+TRANSPORTADOR_ROW_RE = re.compile(
+    r'^\s*(\d+)\s+(?:Volume|Caixa|Volume\(s\)|Caixa\(s\)|Pacote|Unidade)', re.IGNORECASE
 )
 
 SECTION_HEADER = 'DADOS DOS PRODUTOS / SERVIÇOS'
@@ -31,58 +32,31 @@ SECTION_END = 'DADOS ADICIONAIS'
 
 
 class InvoiceImportError(Exception):
-    """Falha controlada na importação (ex.: rótulos RN-13 ausentes)."""
+    pass
 
 
-def _group_lines(words, tol=3):
-    """Agrupa palavras em linhas pelo atributo ``top`` (tolerância em pontos)."""
-    lines = []
-    cur = []
-    cur_top = None
-    for w in sorted(words, key=lambda x: (x['top'], x['x0'])):
-        if cur_top is None or abs(w['top'] - cur_top) <= tol:
-            cur.append(w)
-            cur_top = w['top'] if cur_top is None else cur_top
-        else:
-            lines.append(cur)
-            cur = [w]
-            cur_top = w['top']
-    if cur:
-        lines.append(cur)
-    return lines
+def _parse_br_number(text):
+    """Converte número com formato brasileiro (ex.: '2,0000') para int."""
+    if not text:
+        return None
+    cleaned = text.strip().replace('.', '').replace(',', '.')
+    try:
+        return int(float(cleaned))
+    except (ValueError, TypeError):
+        return None
 
 
-def _header_columns(line):
-    """Identifica as posições x das colunas CÓD. PROD, DESCRIÇÃO e NCM."""
-    code_x = desc_x = ncm_x = None
-    for w in line:
-        t = w['text'].upper()
-        if t.startswith('CÓD') or t.startswith('COD') or t == 'CÓDIGO':
-            code_x = w['x0']
-        if 'DESCRI' in t and desc_x is None:
-            desc_x = w['x0']
-        if t.startswith('NCM') and ncm_x is None:
-            ncm_x = w['x0']
-    return code_x, desc_x, ncm_x
+def _extract_items_with_qty(pdf):
+    """Extrai itens da tabela 'DADOS DOS PRODUTOS / SERVIÇOS' usando extract_tables.
 
-
-def _extract_items(pdf):
-    """Localiza a seção 'DADOS DOS PRODUTOS / SERVIÇOS' e extrai os itens.
-
-    Estratégia: localiza o cabeçalho da seção por posição (y), recorta a
-    região até a próxima seção ('DADOS ADICIONAIS') e alinha as palavras
-    pelas colunas do cabeçalho (CÓD. PROD / DESCRIÇÃO / NCM) — robusto a
-    números dentro da descrição da peça.
+    Retorna lista de dicts: {product_code, description, quantity}
     """
     items = []
-    seen = set()
-
     for page in pdf.pages:
         starts = page.search(SECTION_HEADER)
         if not starts:
             continue
         y0 = max(r['bottom'] for r in starts)
-
         ends = page.search(SECTION_END)
         y1 = page.height
         if ends:
@@ -90,78 +64,161 @@ def _extract_items(pdf):
             if after:
                 y1 = min(after)
 
-        crop = page.crop((0, y0, page.width, y1))
-        words = crop.extract_words()
-        if not words:
-            continue
-
-        lines = _group_lines(words)
-
-        code_x = desc_x = ncm_x = None
-        for ln in lines:
-            joined = ' '.join(w['text'] for w in ln).upper()
-            if ('CÓD.' in joined or 'COD.' in joined or 'CÓDIGO' in joined) and 'DESCRI' in joined:
-                code_x, desc_x, ncm_x = _header_columns(ln)
+        tables = page.find_tables()
+        prod_table = None
+        for table in tables:
+            rows = table.extract()
+            if not rows:
+                continue
+            for row in rows:
+                if row[0] and 'CÓD. PROD' in str(row[0]).upper():
+                    prod_table = table
+                    break
+            if prod_table:
                 break
 
-        if code_x is None or desc_x is None:
+        if not prod_table:
             continue
-        if ncm_x is None:
-            ncm_x = page.width
 
-        for ln in lines:
-            joined = ' '.join(w['text'] for w in ln).upper()
-            if 'DESCRI' in joined or 'CÓD.' in joined or 'DADOS' in joined:
+        header_idx = None
+        for i, row in enumerate(rows):
+            if row[0] and 'CÓD. PROD' in str(row[0]).upper():
+                header_idx = i
+                break
+        if header_idx is None:
+            continue
+
+        qty_col = None
+        header = rows[header_idx]
+        for i, cell in enumerate(header):
+            if cell and 'QUANTIDADE' in str(cell).upper():
+                qty_col = i
+                break
+
+        for row in rows[header_idx + 1:]:
+            if not row or not row[0]:
                 continue
-            ln_sorted = sorted(ln, key=lambda x: x['x0'])
-            if not ln_sorted or not re.match(r'^\d+$', ln_sorted[0]['text']):
+            code = str(row[0]).strip()
+            if not code or not code.isdigit():
                 continue
-            code = ln_sorted[0]['text']
-            # Descrição = palavras após o código até o NCM (8 dígitos, fixo no DANFE).
-            desc_ws = []
-            for w in ln_sorted[1:]:
-                if re.match(r'^\d{8}$', w['text']):
-                    break
-                desc_ws.append(w)
-            desc = ' '.join(w['text'] for w in desc_ws).strip()
-            if not code or not desc:
+            desc = str(row[1]).strip() if len(row) > 1 and row[1] else ''
+            if not desc or len(desc) < 3:
                 continue
-            key = (code, desc)
-            if key in seen:
-                continue
-            seen.add(key)
-            items.append({'product_code': code, 'description': desc})
+            desc = desc.split('\n')[0].strip()
+            quantity = 1
+            if qty_col is not None and len(row) > qty_col and row[qty_col]:
+                parsed = _parse_br_number(str(row[qty_col]).strip())
+                if parsed is not None and 1 <= parsed <= 99999:
+                    quantity = parsed
+            # Se mesmo código e descrição aparecem de novo, mantém como item separado
+            items.append({'product_code': code, 'description': desc, 'quantity': quantity})
+
+        if items:
+            break
+
     return items
 
 
-def extract_invoice(pdf_file):
-    """Extrai number, return_code (RN-13) e itens da tabela de produtos.
-
-    ``pdf_file``: path ou file-like (não é persistido).
-    Retorna dict: {number, return_code, items: [{product_code, description}]}.
-    Levanta InvoiceImportError se os rótulos fixos (RN-13) não forem encontrados.
-    """
+def _extract_full_text(pdf_file):
     full_text = ''
     with pdfplumber.open(pdf_file) as pdf:
-        items = _extract_items(pdf)
+        for page in pdf.pages:
+            full_text += page.extract_text() or ''
+            full_text += '\n'
+    return full_text
+
+
+def extract_outgoing(pdf_file):
+    """Extrai dados de NF de saída: number + itens (com quantidade).
+
+    NÃO extrai return_code nem volumes.
+    """
+    items = []
+    number = None
+    full_text = ''
+    with pdfplumber.open(pdf_file) as pdf:
+        items = _extract_items_with_qty(pdf)
+        for page in pdf.pages:
+            full_text += page.extract_text() or ''
+            full_text += '\n'
+    number_match = NUMBER_RE.search(full_text)
+    if not number_match:
+        raise InvoiceImportError('Campo "NÚMERO" do cabeçalho do DANFE não encontrado no PDF.')
+    number = number_match.group(1)
+    return {
+        'number': number,
+        'items': items,
+    }
+
+
+def extract_incoming(pdf_file):
+    """Extrai dados de NF de entrada: NÚMERO, volumes, itens (com qtd),
+    return_code, e RETORNO REF NF list.
+    """
+    items = []
+    number = None
+    return_code = None
+    volumes = 1
+    retorno_refs = []
+
+    with pdfplumber.open(pdf_file) as pdf:
+        items = _extract_items_with_qty(pdf)
+        full_text = ''
         for page in pdf.pages:
             full_text += page.extract_text() or ''
             full_text += '\n'
 
     number_match = NUMBER_RE.search(full_text)
-    return_code_match = RETURN_CODE_RE.search(full_text)
-
     if not number_match:
-        raise InvoiceImportError(
-            'Campo "NÚMERO" do cabeçalho do DANFE não encontrado no PDF (RN-13).'
-        )
+        raise InvoiceImportError('Campo "NÚMERO" do cabeçalho do DANFE não encontrado no PDF.')
+    number = number_match.group(1)
+
+    return_code_match = RETURN_CODE_RE.search(full_text)
     if not return_code_match:
-        raise InvoiceImportError(
-            'Rótulo fixo "Observacao: Codigo Devolucao:" não encontrado (RN-13).'
-        )
+        raise InvoiceImportError('Rótulo fixo "Observacao: Codigo Devolucao:" não encontrado (RN-13).')
+    return_code = return_code_match.group(1)
+
+    transportador_match = TRANSPORTADOR_QTD_RE.search(full_text)
+    if transportador_match:
+        try:
+            volumes = int(transportador_match.group(1))
+        except (ValueError, TypeError):
+            volumes = 1
+
+    if volumes == 1:
+        with pdfplumber.open(pdf_file) as pdf:
+            for page in pdf.pages:
+                tables = page.find_tables()
+                for table in tables:
+                    rows = table.extract()
+                    for i, row in enumerate(rows):
+                        if not row or not row[0]:
+                            continue
+                        cell = str(row[0]).upper()
+                        if 'QUANTIDADE' in cell:
+                            if i + 1 < len(rows) and rows[i + 1] and rows[i + 1][0]:
+                                val = _parse_br_number(str(rows[i + 1][0]).strip().split()[0])
+                                if val and 1 <= val <= 1000:
+                                    volumes = val
+                                    break
+                    if volumes > 1:
+                        break
+                if volumes > 1:
+                    break
+
+    retorno_match = RETORNO_REF_RE.search(full_text)
+    if retorno_match:
+        raw = retorno_match.group(1)
+        refs = re.split(r'[/\s]+', raw.strip())
+        retorno_refs = [r.strip() for r in refs if r.strip().isdigit()]
 
     return {
-        'number': number_match.group(1),
-        'return_code': return_code_match.group(1),
+        'number': number,
+        'return_code': return_code,
+        'volumes': volumes,
         'items': items,
+        'retorno_refs': retorno_refs,
     }
+
+
+extract_invoice = extract_incoming

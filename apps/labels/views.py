@@ -3,7 +3,7 @@ import calendar
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -25,10 +25,12 @@ LabelSettingsForm = forms.modelform_factory(
 
 @login_required
 def part_labels_pdf(request, pk):
-    """RF-06: PDF com 1 etiqueta por peça associada à NF."""
     invoice = InvoiceService.get_for_technician(pk, request.user)
+    if not invoice.destination_calls.exists():
+        messages.warning(request, 'Nenhuma peça vinculada a esta NF de entrada para gerar etiquetas.')
+        return redirect('invoices:invoice_detail', pk=invoice.pk)
     settings = LabelService.get_settings(request.user)
-    pdf = LabelService.generate_part_labels_pdf(invoice, settings)
+    pdf = LabelService.generate_part_labels_pdf_for_incoming(invoice, settings)
     resp = HttpResponse(pdf, content_type='application/pdf')
     resp['Content-Disposition'] = f'inline; filename="etiquetas_pecas_{invoice.number}.pdf"'
     return resp
@@ -36,11 +38,11 @@ def part_labels_pdf(request, pk):
 
 @login_required
 def reprint(request):
-    """RF-07: reimpressão de etiquetas (peças e romaneio) do técnico.
-
-    Só mostra NFs que possuem ao menos uma peça associada.
-    """
-    qs = InvoiceService.list_with_associations_by_technician(request.user)
+    qs = InvoiceService.list_by_technician(request.user).filter(
+        type='incoming', items__isnull=False
+    ).annotate(
+        num_calls=Count('destination_calls')
+    ).distinct()
     q = request.GET.get('q', '').strip()
     today = timezone.localdate()
     default_from = today.replace(day=1).isoformat()

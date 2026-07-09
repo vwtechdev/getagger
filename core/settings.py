@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.services',
     'apps.invoices',
-    'apps.associations',
     'apps.labels',
     'core',
 ]
@@ -175,7 +174,6 @@ JAZZMIN_SETTINGS = {
         "accounts.User",
         "services.ServiceCall",
         "invoices.Invoice",
-        "associations.Association",
         "labels.PartLabel",
         "labels.InvoiceLabel",
         "labels.LabelSettings",
@@ -186,7 +184,6 @@ JAZZMIN_SETTINGS = {
         "services.ServiceCall": "fas fa-wrench",
         "invoices.Invoice": "fas fa-file-invoice",
         "invoices.InvoiceItem": "fas fa-cube",
-        "associations.Association": "fas fa-link",
         "labels.PartLabel": "fas fa-tag",
         "labels.InvoiceLabel": "fas fa-barcode",
         "labels.LabelSettings": "fas fa-cog",
