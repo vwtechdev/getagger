@@ -6,26 +6,67 @@
         <h1 class="h3 mb-3">Configurações de Impressão</h1>
         <div class="card shadow-sm">
             <div class="card-body">
-                <form method="post">
+                <form method="post" x-data="{ pageFormat: '{{ form.page_format.value|default:"PDF_A4" }}' }">
                     {% csrf_token %}
                     {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
                     <div class="mb-3">
-                        <label class="form-label" for="id_page_format">Formato de página</label>
-                        {{ form.page_format }}
-                        <div class="form-text">A4 para impressoras comuns; Bobina 80mm para impressoras térmicas não fiscais.</div>
+                        <label class="form-label" for="id_page_format">Formato de saída</label>
+                        <select name="page_format" id="id_page_format" class="form-select" x-model="pageFormat">
+                            <option value="PDF_A4" {% if form.page_format.value == 'PDF_A4' %}selected{% endif %}>PDF — Folha A4</option>
+                            <option value="TEXT_RAW" {% if form.page_format.value == 'TEXT_RAW' %}selected{% endif %}>Texto — Impressão RAW (40 colunas)</option>
+                        </select>
+                        <div class="form-text">PDF para impressoras comuns; RAW (texto + ESC/POS) para impressoras não fiscais.</div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="id_margin">Margem (mm)</label>
-                        {{ form.margin }}
-                        <div class="form-text">Margem ao redor das etiquetas na folha.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="id_font_size">Tamanho da fonte (pt)</label>
-                        {{ form.font_size }}
-                        <div class="form-text">Tamanho base do texto. Título usa fonte + 3pt.</div>
+                    <div x-show="pageFormat === 'PDF_A4'" x-cloak>
+                        <div class="mb-3">
+                            <label class="form-label" for="id_margin">Margem (mm)</label>
+                            {{ form.margin }}
+                            <div class="form-text">Margem ao redor das etiquetas na folha.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="id_font_size">Tamanho da fonte (pt)</label>
+                            {{ form.font_size }}
+                            <div class="form-text">Tamanho base do texto. Título usa fonte + 3pt.</div>
+                        </div>
                     </div>
                     <button class="btn btn-primary w-100" type="submit">Salvar</button>
                 </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mt-3" x-data="webusbPrinter">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Impressão RAW via USB</h2>
+                <template x-if="!supported">
+                    <p class="text-muted small mb-0">WebUSB não é suportado neste navegador. Use Chrome, Edge ou Opera para imprimir diretamente via USB.</p>
+                </template>
+                <template x-if="supported">
+                    <div>
+                        <p class="text-muted small mb-2">
+                            <template x-if="connected">
+                                <span>Impressora conectada (USB)</span>
+                            </template>
+                            <template x-if="!connected">
+                                <span>Nenhuma impressora conectada.</span>
+                            </template>
+                        </p>
+                        <p class="text-danger small mb-2" x-show="error" x-text="error"></p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                    x-show="!connected" @click="connectUSB"
+                                    style="display:inline-flex;align-items:center;gap:4px">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                                </svg>
+                                Conectar via USB
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success"
+                                    x-show="connected" @click="test">Testar</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    x-show="connected" @click="disconnect">Desconectar</button>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
     </div>

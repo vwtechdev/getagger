@@ -43,3 +43,11 @@ class LabelService:
         if settings is None:
             settings = LabelService.get_settings(invoice.technician)
         return label_generator.generate_part_labels_pdf(etiquetas, settings, title)
+
+    @staticmethod
+    def generate_combined_labels_pdf(invoice, settings=None):
+        if settings is None:
+            settings = LabelService.get_settings(invoice.technician)
+        LabelService.ensure_invoice_labels(invoice)
+        part_labels = list(LabelService.ensure_part_labels_for_incoming(invoice))
+        return label_generator.generate_combined_labels_pdf(invoice, part_labels, settings)

@@ -108,6 +108,28 @@ def invoice_labels_pdf(request, pk):
     from apps.labels.services import LabelService
     settings = LabelService.get_settings(request.user)
     pdf = LabelService.generate_invoice_labels_pdf(invoice, settings)
-    resp = HttpResponse(pdf, content_type='application/pdf')
-    resp['Content-Disposition'] = f'inline; filename="romaneio_{invoice.number}.pdf"'
+    if settings.page_format == 'TEXT_RAW':
+        resp = HttpResponse(pdf, content_type='text/plain; charset=utf-8')
+        resp['Content-Disposition'] = f'attachment; filename="devolucao_{invoice.number}.txt"'
+    else:
+        resp = HttpResponse(pdf, content_type='application/pdf')
+        resp['Content-Disposition'] = f'inline; filename="devolucao_{invoice.number}.pdf"'
+    return resp
+
+
+@login_required
+def combined_labels_pdf(request, pk):
+    invoice = InvoiceService.get_for_technician(pk, request.user)
+    if not invoice.destination_calls.exists():
+        messages.warning(request, 'Nenhuma peça vinculada a esta NF de entrada para gerar etiquetas.')
+        return redirect('invoices:invoice_detail', pk=invoice.pk)
+    from apps.labels.services import LabelService
+    settings = LabelService.get_settings(request.user)
+    pdf = LabelService.generate_combined_labels_pdf(invoice, settings)
+    if settings.page_format == 'TEXT_RAW':
+        resp = HttpResponse(pdf, content_type='text/plain; charset=utf-8')
+        resp['Content-Disposition'] = f'attachment; filename="etiquetas_{invoice.number}.txt"'
+    else:
+        resp = HttpResponse(pdf, content_type='application/pdf')
+        resp['Content-Disposition'] = f'inline; filename="etiquetas_{invoice.number}.pdf"'
     return resp

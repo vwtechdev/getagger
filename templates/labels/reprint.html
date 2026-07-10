@@ -62,8 +62,15 @@
                     </div>
                     {% if n.num_calls %}
                     <div class="mt-auto pt-3 d-flex gap-2 justify-content-end border-top border-secondary">
-                        <a href="{% url 'labels:part_labels_pdf' pk=n.pk %}" target="_blank" class="btn btn-sm btn-outline-success">Peças (PDF)</a>
-                        <a href="{% url 'invoices:invoice_labels_pdf' pk=n.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary">Romaneio (PDF)</a>
+                        <a href="{% url 'invoices:combined_labels_pdf' pk=n.pk %}"
+                           onclick="printLabel(this.href, event);return false"
+                           class="btn btn-sm btn-outline-success"
+                           style="display:inline-flex;align-items:center;justify-content:center;gap:4px">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                            </svg>
+                            Imprimir Etiquetas
+                        </a>
                     </div>
                     {% else %}
                     <div class="mt-auto pt-3 text-muted small text-center border-top border-secondary">

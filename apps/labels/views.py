@@ -31,8 +31,12 @@ def part_labels_pdf(request, pk):
         return redirect('invoices:invoice_detail', pk=invoice.pk)
     settings = LabelService.get_settings(request.user)
     pdf = LabelService.generate_part_labels_pdf_for_incoming(invoice, settings)
-    resp = HttpResponse(pdf, content_type='application/pdf')
-    resp['Content-Disposition'] = f'inline; filename="etiquetas_pecas_{invoice.number}.pdf"'
+    if settings.page_format == 'TEXT_RAW':
+        resp = HttpResponse(pdf, content_type='text/plain; charset=utf-8')
+        resp['Content-Disposition'] = f'attachment; filename="etiquetas_pecas_{invoice.number}.txt"'
+    else:
+        resp = HttpResponse(pdf, content_type='application/pdf')
+        resp['Content-Disposition'] = f'inline; filename="etiquetas_pecas_{invoice.number}.pdf"'
     return resp
 
 

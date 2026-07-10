@@ -47,18 +47,22 @@ def service_call_new(request):
     form = ServiceCallForm(request.POST or None, initial={'date': today}, technician=request.user)
     if form.is_valid():
         quantity = form.cleaned_data.get('quantity') or 1
+        ticket = form.cleaned_data['ticket_number']
+        serial = form.cleaned_data['serial_number']
+        defect = form.cleaned_data['defect']
+        status = 'attended' if (ticket or serial or defect) else 'new'
         kwargs = dict(
             technician=request.user,
-            ticket_number=form.cleaned_data['ticket_number'],
-            serial_number=form.cleaned_data['serial_number'],
+            ticket_number=ticket,
+            serial_number=serial,
             part_name=form.cleaned_data['part_name'].upper(),
-            defect=form.cleaned_data['defect'],
+            defect=defect,
             date=form.cleaned_data['date'],
             source_invoice_number=form.cleaned_data.get('source_invoice_number', ''),
             quantity=1,
+            status=status,
         )
-        call = ServiceCallService.create(**kwargs)
-        for _ in range(quantity - 1):
+        for _ in range(quantity):
             ServiceCallService.create(**kwargs)
         messages.success(request, f'{quantity} peça(s) {call.part_name} criada(s).')
         return redirect('services:service_call_list')

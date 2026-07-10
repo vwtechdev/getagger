@@ -35,21 +35,14 @@
             </dl>
             <div class="d-flex justify-content-end gap-2 pt-3 mt-3 border-top border-secondary">
                 {% if invoice.type == 'incoming' and calls %}
-                <a href="{% url 'labels:part_labels_pdf' pk=invoice.pk %}" target="_blank"
+                <a href="{% url 'invoices:combined_labels_pdf' pk=invoice.pk %}"
+                   onclick="printLabel(this.href, event);return false"
                    class="btn btn-success btn-sm"
                    style="display:inline-flex;align-items:center;justify-content:center;gap:4px">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
                     </svg>
-                    Etiquetas
-                </a>
-                <a href="{% url 'invoices:invoice_labels_pdf' pk=invoice.pk %}" target="_blank"
-                   class="btn btn-outline-secondary btn-sm"
-                   style="display:inline-flex;align-items:center;justify-content:center;gap:4px">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                    </svg>
-                    Romaneio
+                    Imprimir Etiquetas
                 </a>
                 {% endif %}
                 {% if invoice.type == 'incoming' and invoice.return_refs %}

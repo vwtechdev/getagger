@@ -34,7 +34,7 @@ class Command(BaseCommand):
             self.stdout.write(f'[{label}]...', ending=' ')
             self.stdout.flush()
             try:
-                subprocess.run(cmd, check=True, capture_output=True, text=True)
+                subprocess.run(cmd, check=True, capture_output=True, text=True, cwd=str(base))
                 self.stdout.write(self.style.SUCCESS('OK'))
                 _log(f'{label}: OK')
             except subprocess.CalledProcessError as e:

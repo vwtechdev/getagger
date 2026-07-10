@@ -16,21 +16,25 @@
                         {% if form.part_name.errors %}<div class="text-danger small">{{ form.part_name.errors }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
+                        <label class="form-label" for="id_quantity">Quantidade</label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}<div class="text-danger small">{{ form.quantity.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label" for="id_source_invoice_number">Número da NF de saída</label>
                         {{ form.source_invoice_number }}
                         <div class="form-text">Opcional — informe se esta peça veio de uma NF de saída.</div>
                         {% if form.source_invoice_number.errors %}<div class="text-danger small">{{ form.source_invoice_number.errors }}</div>{% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="id_quantity">Quantidade</label>
-                        {{ form.quantity }}
-                        {% if form.quantity.errors %}<div class="text-danger small">{{ form.quantity.errors }}</div>{% endif %}
                     </div>
                     {% else %}
                     <div class="mb-3">
                         <label class="form-label">Peça</label>
                         <input type="text" class="form-control" value="{{ form.part_name.value|default:'' }}" {% if form.fields.part_name.widget.attrs.readonly %}readonly{% endif %}>
                         <input type="hidden" name="part_name" value="{{ form.part_name.value|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="id_source_invoice_number">Número da NF de saída</label>
+                        <input type="text" class="form-control" value="{{ form.source_invoice_number.value|default:'' }}" readonly>
                     </div>
                     {% endif %}
 

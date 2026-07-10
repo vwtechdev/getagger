@@ -46,10 +46,10 @@ class InvoiceLabelTest(TestCase):
     def test_romaneio_thermal_one_per_page(self):
         from apps.labels.models import LabelSettings
         settings, _ = LabelSettings.objects.get_or_create(technician=self.tech)
-        settings.page_format = 'THERMAL_80MM'
+        settings.page_format = 'TEXT_RAW'
         settings.save()
         pdf = LabelService.generate_invoice_labels_pdf(self.invoice, settings)
-        self.assertTrue(pdf.startswith(b'%PDF'))
+        self.assertTrue(pdf.startswith(b'\x1b\x40'))
 
 
 class PartLabelTest(TestCase):

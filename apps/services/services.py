@@ -19,7 +19,7 @@ class ServiceCallService:
         return ServiceCallRepository.get_for_technician(pk, technician)
 
     @staticmethod
-    def create(technician, *, ticket_number='', serial_number='', part_name, defect='', date=None, source_invoice_number='', quantity=1):
+    def create(technician, *, ticket_number='', serial_number='', part_name, defect='', date=None, source_invoice_number='', quantity=1, status='new'):
         if date is None:
             date = timezone.localdate()
         return ServiceCallRepository.create(
@@ -31,6 +31,7 @@ class ServiceCallService:
             date=date,
             source_invoice_number=source_invoice_number,
             quantity=quantity,
+            status=status,
         )
 
     @staticmethod

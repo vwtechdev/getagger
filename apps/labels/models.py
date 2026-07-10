@@ -51,8 +51,8 @@ class InvoiceLabel(BaseModel):
 
 class LabelSettings(BaseModel):
     PAGE_FORMATS = [
-        ('A4', 'A4'),
-        ('THERMAL_80MM', 'Bobina 80mm'),
+        ('PDF_A4', 'PDF — Folha A4'),
+        ('TEXT_RAW', 'Texto — Impressão RAW (40 colunas)'),
     ]
 
     technician = models.OneToOneField(
@@ -64,7 +64,7 @@ class LabelSettings(BaseModel):
     page_format = models.CharField(
         max_length=20,
         choices=PAGE_FORMATS,
-        default='A4',
+        default='PDF_A4',
         verbose_name='Formato de página',
     )
     margin = models.DecimalField(

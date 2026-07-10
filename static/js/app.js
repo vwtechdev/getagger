@@ -8,10 +8,145 @@ document.body.addEventListener('htmx:configRequest', function (event) {
 
 // Service Worker para PWA (comportamento de app mobile).
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/static/js/sw.js', { scope: '/' });
+    navigator.serviceWorker.register('/static/js/sw.js', { scope: '/static/js/' });
 }
 
-// Alpine.js barcode scanner
+// WebUSB — impressão RAW direto para impressora não fiscal
+let printerDevice = null;
+let printerType = null;
+let printerConnected = localStorage.getItem('printerConnected') === 'true';
+let printerError = '';
+
+function _findOutEndpoint(device) {
+    for (const iface of device.configurations[0].interfaces) {
+        for (const alt of iface.alternates) {
+            for (const ep of alt.endpoints) {
+                if (ep.direction === 'out') return ep.endpointNumber;
+            }
+        }
+    }
+    return null;
+}
+
+async function connectUSB() {
+    if (!('usb' in navigator)) return false;
+    try {
+        const device = await navigator.usb.requestDevice({ filters: [] });
+        await device.open();
+        await device.selectConfiguration(1);
+        try { await device.reset(); } catch {}
+        try { await device.detachKernelDriver(0); } catch {}
+        await device.claimInterface(0);
+        const ep = _findOutEndpoint(device);
+        if (!ep) throw new Error('Nenhum endpoint OUT encontrado.');
+        device._outEndpoint = ep;
+        printerDevice = device;
+        printerType = 'usb';
+        printerConnected = true;
+        printerError = '';
+        localStorage.setItem('printerConnected', 'true');
+        return true;
+    } catch (e) {
+        printerError = 'WebUSB: ' + e.message;
+        return false;
+    }
+}
+
+async function restorePrinter() {
+    if (!('usb' in navigator) || !printerConnected) return;
+    try {
+        const devices = await navigator.usb.getDevices();
+        for (const device of devices) {
+            try {
+                await device.open();
+                await device.selectConfiguration(1);
+                try { await device.reset(); } catch {}
+                try { await device.detachKernelDriver(0); } catch {}
+                await device.claimInterface(0);
+                const ep = _findOutEndpoint(device);
+                if (!ep) { await device.close(); continue; }
+                device._outEndpoint = ep;
+                printerDevice = device;
+                printerError = '';
+                return;
+            } catch { try { await device.close(); } catch {} }
+        }
+        printerConnected = false;
+        localStorage.removeItem('printerConnected');
+    } catch {}
+}
+
+async function sendRawToPrinter(data) {
+    if (!printerDevice) return false;
+    try {
+        const ep = printerDevice._outEndpoint || 1;
+        const maxPacket = 64;
+        for (let offset = 0; offset < data.byteLength; offset += maxPacket) {
+            const chunk = data.slice(offset, offset + maxPacket);
+            await printerDevice.transferOut(ep, chunk);
+        }
+        return true;
+    } catch (e) {
+        printerError = 'Falha ao enviar: ' + e.message;
+        printerDevice = null;
+        printerConnected = false;
+        localStorage.removeItem('printerConnected');
+        return false;
+    }
+}
+
+async function testPrinter() {
+    if (!printerConnected) return alert('Conecte uma impressora primeiro.');
+    if (!printerDevice) await restorePrinter();
+    if (!printerDevice) return alert('Reconexão automática falhou. Conecte novamente em Configurações.');
+    const enc = new TextEncoder();
+    const testData = enc.encode(
+        '\x1b\x40' +          // ESC @ — init
+        '\x1b\x21\x30' +      // ESC ! 0x30 — double height + double width
+        '\x1b\x61\x01' +      // ESC a 1 — center
+        '  GETAGGER OK\n' +
+        '\x1b\x21\x00' +      // ESC ! 0 — normal
+        '\x1b\x61\x00' +      // ESC a 0 — left
+        'Impressora conectada.\n\n\n\n' +
+        '\x1d\x56\x01'        // GS V 1 — partial cut
+    );
+    const ok = await sendRawToPrinter(testData);
+    alert(ok ? 'Teste enviado com sucesso!' : 'Falha ao enviar teste.\n\n' + printerError);
+}
+
+async function printLabel(url, event) {
+    if (!printerConnected) {
+        window.open(url, '_blank');
+        return;
+    }
+    if (!printerDevice) await restorePrinter();
+    if (!printerDevice) {
+        window.open(url, '_blank');
+        return;
+    }
+    event.preventDefault();
+    try {
+        const resp = await fetch(url);
+        const contentType = resp.headers.get('content-type') || '';
+        if (!contentType.includes('text/plain')) {
+            alert('Formato PDF detectado. Mude para TEXT_RAW nas Configurações para imprimir direto na impressora.');
+            return;
+        }
+        const blob = await resp.blob();
+        const buffer = await blob.arrayBuffer();
+        const sent = await sendRawToPrinter(new Uint8Array(buffer));
+        if (!sent) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = url.split('/').pop().replace('.pdf', '.txt');
+            a.click();
+        }
+    } catch {
+        window.open(url, '_blank');
+    }
+}
+
+// Alpine.js
 document.addEventListener('alpine:init', () => {
     Alpine.data('barcodeScanner', () => ({
         scanning: false,
@@ -35,7 +170,6 @@ document.addEventListener('alpine:init', () => {
                         this.cameraState = result.state;
                     });
                 } catch {
-                    // Permissions API unavailable — fall through to getUserMedia probe
                 }
             }
             if (this.cameraState === 'prompt') {
@@ -90,6 +224,47 @@ document.addEventListener('alpine:init', () => {
             } else {
                 this.scanning = false;
             }
+        },
+    }));
+
+    Alpine.data('webusbPrinter', () => ({
+        init() {
+            this.connected = printerConnected;
+            this.error = printerError;
+            if (printerConnected && !printerDevice) {
+                restorePrinter().then(() => {
+                    this.connected = printerConnected;
+                    this.error = printerError;
+                });
+            }
+        },
+        connected: false,
+        error: '',
+        get supported() { return 'usb' in navigator; },
+        async connectUSB() {
+            const ok = await window.connectUSB();
+            if (!ok) {
+                alert('Conexão USB falhou.\n\n' + printerError);
+            } else {
+                this.connected = true;
+                this.error = '';
+            }
+        },
+        async disconnect() {
+            if (printerDevice) {
+                try { await printerDevice.close(); } catch {}
+                printerDevice = null;
+            }
+            printerType = null;
+            printerConnected = false;
+            printerError = '';
+            localStorage.removeItem('printerConnected');
+            this.connected = false;
+            this.error = '';
+        },
+        test() {
+            if (!printerConnected) return alert('Conecte uma impressora primeiro.');
+            testPrinter();
         },
     }));
 });

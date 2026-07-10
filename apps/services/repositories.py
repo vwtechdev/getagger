@@ -11,7 +11,7 @@ class ServiceCallRepository:
         return ServiceCallRepository.for_technician(technician).get(pk=pk)
 
     @staticmethod
-    def create(technician, *, ticket_number='', serial_number='', part_name, defect='', date=None, source_invoice_number='', quantity=1):
+    def create(technician, *, ticket_number='', serial_number='', part_name, defect='', date=None, source_invoice_number='', quantity=1, status='new'):
         return ServiceCall.objects.create(
             technician=technician,
             ticket_number=ticket_number,
@@ -21,6 +21,7 @@ class ServiceCallRepository:
             date=date,
             source_invoice_number=source_invoice_number,
             quantity=quantity,
+            status=status,
         )
 
     @staticmethod
