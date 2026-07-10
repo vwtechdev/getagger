@@ -29,7 +29,10 @@
                             <div class="form-text">Tamanho base do texto. Título usa fonte + 3pt.</div>
                         </div>
                     </div>
-                    <button class="btn btn-primary w-100" type="submit">Salvar</button>
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'invoices:invoice_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button class="btn btn-primary" type="submit">Salvar</button>
+                    </div>
                 </form>
             </div>
         </div>

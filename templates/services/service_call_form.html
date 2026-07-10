@@ -3,6 +3,29 @@
 <div x-data="{ showDelete: false }">
 <div class="row justify-content-center">
     <div class="col-md-7 col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{% url 'services:service_call_list' %}"
+               class="btn btn-outline-secondary btn-sm"
+               style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
+               title="Voltar"
+               aria-label="Voltar">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                </svg>
+            </a>
+            {% if not creating %}
+            <button type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
+                    @click="showDelete = true"
+                    title="Excluir"
+                    aria-label="Excluir">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+            </button>
+            {% endif %}
+        </div>
         <div class="card shadow-sm">
             <div class="card-body">
                 <form method="post" x-data="barcodeScanner">
@@ -72,15 +95,7 @@
                                             <button class="btn-close btn-close-white" type="button" @click="stopScan" aria-label="Fechar"></button>
                                         </div>
                                         <div id="scanner-preview" class="scanner-preview" style="width:100%;background:#000;border-radius:12px;overflow:hidden"></div>
-                                        <div class="d-flex align-items-center justify-content-center gap-3 mt-3" x-show="zoomSupported">
-                                            <button class="btn btn-outline-light rounded-circle zoom-btn" type="button" @click="adjustZoom(-0.5)" :disabled="zoom <= 1" style="display:inline-flex;align-items:center;justify-content:center">
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                            </button>
-                                            <span class="badge bg-dark border border-secondary px-3 py-2" style="min-width:60px;font-size:0.85rem" x-text="zoom.toFixed(1) + 'x'"></span>
-                                            <button class="btn btn-outline-light rounded-circle zoom-btn" type="button" @click="adjustZoom(0.5)" :disabled="zoom >= 10" style="display:inline-flex;align-items:center;justify-content:center">
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                            </button>
-                                        </div>
+
                                     </div>
                                 </template>
                                 <template x-if="error">
@@ -107,20 +122,9 @@
                         <div class="form-text">Automática (PT-BR) — pode ajustar se necessário.</div>
                         {% if form.date.errors %}<div class="text-danger small">{{ form.date.errors }}</div>{% endif %}
                     </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-primary" type="submit">Salvar</button>
+                    <div class="d-flex gap-2 justify-content-end">
                         <a href="{% url 'services:service_call_list' %}" class="btn btn-outline-secondary">Cancelar</a>
-                        {% if not creating %}
-                        <button type="button" class="btn btn-outline-danger ms-auto"
-                                style="display:inline-flex;align-items:center;justify-content:center;gap:4px"
-                                @click="showDelete = true"
-                                aria-label="Excluir">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                            </svg>
-                            Excluir
-                        </button>
-                        {% endif %}
+                        <button class="btn btn-primary" type="submit">Salvar</button>
                     </div>
                 </form>
 

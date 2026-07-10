@@ -154,15 +154,9 @@ document.addEventListener('alpine:init', () => {
         error: '',
         cameraState: 'prompt',
         permissionPending: false,
-        zoom: 1.0,
         _videoTrack: null,
         _nativeScanning: false,
         _detector: null,
-        get zoomSupported() {
-            if (!this._videoTrack) return false;
-            const caps = this._videoTrack.getCapabilities();
-            return caps && caps.zoom && caps.zoom.min !== undefined;
-        },
         get supported() {
             return 'BarcodeDetector' in window || typeof Html5Qrcode !== 'undefined';
         },
@@ -230,7 +224,6 @@ document.addEventListener('alpine:init', () => {
                 video.srcObject = stream;
                 await video.play();
                 this._videoTrack = stream.getVideoTracks()[0];
-                this.zoom = 1.0;
                 const formats = await BarcodeDetector.getSupportedFormats().catch(() => []);
                 this._detector = new BarcodeDetector({
                     formats: formats.filter(f =>
@@ -274,7 +267,6 @@ document.addEventListener('alpine:init', () => {
                     () => {}
                 );
                 this._videoTrack = this._getVideoTrack();
-                this.zoom = 1.0;
             } catch (e) {
                 this.error = 'Não foi possível acessar a câmera. Verifique as permissões e tente novamente, ou digite o número manualmente.';
                 this.scanning = false;
@@ -288,22 +280,11 @@ document.addEventListener('alpine:init', () => {
             }
             return null;
         },
-        async adjustZoom(delta) {
-            const newZoom = Math.max(1, Math.min(10, +(this.zoom + delta).toFixed(1)));
-            this.zoom = newZoom;
-            if (this._videoTrack) {
-                try {
-                    await this._videoTrack.applyConstraints({
-                        advanced: [{ zoom: newZoom }]
-                    });
-                } catch {}
-            }
-        },
+
         stopScan() {
             this._nativeScanning = false;
             this._detector = null;
             this._videoTrack = null;
-            this.zoom = 1.0;
             if (this.scanner) {
                 this.scanner.stop().then(() => {
                     this.scanner.clear();
