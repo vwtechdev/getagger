@@ -52,21 +52,22 @@
         <div class="col">
             <a href="{% url 'services:service_call_edit' pk=c.pk %}" class="card-call card h-100 text-decoration-none">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between gap-2">
-                        <span class="badge bg-secondary">Chamado {{ c.ticket_number|default:"—" }}</span>
-                        <span class="badge {% if c.status == 'new' %}bg-warning{% else %}bg-info{% endif %}">
-                            {{ c.get_status_display }}
-                        </span>
-                    </div>
+                    <span class="badge bg-secondary">Chamado {{ c.ticket_number|default:"—" }}</span>
                     <h5 class="card-title mt-2">{{ c.part_name }}</h5>
                     <p class="card-text small mb-0">Defeito: {{ c.defect|default:"—" }}</p>
-                    {% if c.source_invoice %}
-                    <span class="badge bg-info mt-1">NF {{ c.source_invoice.number }}</span>
-                    {% elif c.source_invoice_number %}
-                    <span class="badge bg-secondary mt-1">NF {{ c.source_invoice_number }}</span>
+                    {% if c.serial_number %}
+                        <p class="card-text small mb-0  ">NS: {{ c.serial_number }}</p>
                     {% endif %}
-                    {% if c.serial_number %}<span class="badge bg-secondary mt-2">NS: {{ c.serial_number }}</span>{% endif %}
-                    <small class="text-muted mt-2 d-block text-end">{{ c.date|date:"d/m/Y" }}</small>
+                    <small class="card-text small mb-0">{{ c.date|date:"d/m/Y" }}</small>
+
+                    <div class="d-flex justify-content-between gap-2">
+                        {% if c.source_invoice %}
+                            <span class="badge bg-info mt-1">NF {{ c.source_invoice.number }}</span>
+                        {% elif c.source_invoice_number %}
+                            <span class="badge bg-success mt-1">NF {{ c.source_invoice_number }}</span>
+                        {% endif %}
+                        <span class="badge {% if c.status == 'new' %}bg-warning{% else %}bg-danger{% endif %}">{{ c.get_status_display }}</span>
+                    </div>
                 </div>
             </a>
         </div>
