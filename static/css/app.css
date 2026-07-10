@@ -703,6 +703,11 @@ hr {
     }
 }
 
+.zoom-btn {
+    width: 48px;
+    height: 48px;
+}
+
 /* ===== Floating Action Button ===== */
 .fab {
     position: fixed;

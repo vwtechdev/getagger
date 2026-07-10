@@ -68,23 +68,19 @@
                                 <template x-if="!error">
                                     <div>
                                         <div class="d-flex align-items-center justify-content-between mb-3">
-                                            <h2 class="h5 mb-0" style="color:#FFFFFF">Escanear Código de Barras</h2>
-                                            <button class="btn btn-outline-secondary btn-sm" type="button" @click="stopScan" style="display:inline-flex;align-items:center;gap:4px">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                                Fechar
-                                            </button>
+                                            <h2 class="h5 mb-0" style="color:#FFFFFF">Número de Série</h2>
+                                            <button class="btn-close btn-close-white" type="button" @click="stopScan" aria-label="Fechar"></button>
                                         </div>
                                         <div id="scanner-preview" class="scanner-preview" style="width:100%;background:#000;border-radius:12px;overflow:hidden"></div>
                                         <div class="d-flex align-items-center justify-content-center gap-3 mt-3" x-show="zoomSupported">
-                                            <button class="btn btn-outline-secondary btn-sm" type="button" @click="adjustZoom(-0.5)" :disabled="zoom <= 1" style="display:inline-flex;align-items:center;gap:4px;min-width:36px;justify-content:center">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                            <button class="btn btn-outline-light rounded-circle zoom-btn" type="button" @click="adjustZoom(-0.5)" :disabled="zoom <= 1" style="display:inline-flex;align-items:center;justify-content:center">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                             </button>
-                                            <span class="small text-muted" x-text="zoom.toFixed(1) + 'x'"></span>
-                                            <button class="btn btn-outline-secondary btn-sm" type="button" @click="adjustZoom(0.5)" :disabled="zoom >= 10" style="display:inline-flex;align-items:center;gap:4px;min-width:36px;justify-content:center">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                            <span class="badge bg-dark border border-secondary px-3 py-2" style="min-width:60px;font-size:0.85rem" x-text="zoom.toFixed(1) + 'x'"></span>
+                                            <button class="btn btn-outline-light rounded-circle zoom-btn" type="button" @click="adjustZoom(0.5)" :disabled="zoom >= 10" style="display:inline-flex;align-items:center;justify-content:center">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                             </button>
                                         </div>
-                                        <p class="text-muted small mt-2 mb-0">Aponte a câmera para o código de barras da etiqueta.</p>
                                     </div>
                                 </template>
                                 <template x-if="error">

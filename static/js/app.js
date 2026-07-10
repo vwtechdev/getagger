@@ -156,13 +156,15 @@ document.addEventListener('alpine:init', () => {
         permissionPending: false,
         zoom: 1.0,
         _videoTrack: null,
+        _nativeScanning: false,
+        _detector: null,
         get zoomSupported() {
             if (!this._videoTrack) return false;
             const caps = this._videoTrack.getCapabilities();
             return caps && caps.zoom && caps.zoom.min !== undefined;
         },
         get supported() {
-            return typeof Html5Qrcode !== 'undefined';
+            return 'BarcodeDetector' in window || typeof Html5Qrcode !== 'undefined';
         },
         async init() {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -204,6 +206,61 @@ document.addEventListener('alpine:init', () => {
             this.scanning = true;
             await this.$nextTick();
             await new Promise(r => requestAnimationFrame(r));
+            if ('BarcodeDetector' in window) {
+                await this._startNativeScan();
+            } else {
+                await this._startHtml5Scan();
+            }
+        },
+        async _startNativeScan() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                const container = document.getElementById('scanner-preview');
+                if (!container) return;
+                const video = document.createElement('video');
+                video.setAttribute('autoplay', '');
+                video.setAttribute('playsinline', '');
+                video.style.width = '100%';
+                video.style.height = '100%';
+                video.style.objectFit = 'cover';
+                container.innerHTML = '';
+                container.appendChild(video);
+                video.srcObject = stream;
+                await video.play();
+                this._videoTrack = stream.getVideoTracks()[0];
+                this.zoom = 1.0;
+                const formats = await BarcodeDetector.getSupportedFormats().catch(() => []);
+                this._detector = new BarcodeDetector({
+                    formats: formats.filter(f =>
+                        ['code_128','code_39','codabar','ean_13','ean_8','upc_a','upc_e','qr_code','data_matrix'].includes(f)
+                    )
+                });
+                this._nativeScanning = true;
+                this._detectLoop();
+            } catch (e) {
+                this.error = 'Não foi possível acessar a câmera. Verifique as permissões e tente novamente, ou digite o número manualmente.';
+                this.scanning = false;
+            }
+        },
+        async _detectLoop() {
+            while (this._nativeScanning) {
+                const video = document.querySelector('#scanner-preview video');
+                if (!video || !this._nativeScanning) break;
+                try {
+                    const codes = await this._detector.detect(video);
+                    if (codes.length > 0) {
+                        this.$refs.serialInput.value = codes[0].rawValue;
+                        this.$refs.serialInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        this.stopScan();
+                        return;
+                    }
+                } catch {}
+                await new Promise(r => setTimeout(r, 150));
+            }
+        },
+        async _startHtml5Scan() {
             try {
                 this.scanner = new Html5Qrcode('scanner-preview');
                 await this.scanner.start(
@@ -243,6 +300,8 @@ document.addEventListener('alpine:init', () => {
             }
         },
         stopScan() {
+            this._nativeScanning = false;
+            this._detector = null;
             this._videoTrack = null;
             this.zoom = 1.0;
             if (this.scanner) {
@@ -251,6 +310,11 @@ document.addEventListener('alpine:init', () => {
                     this.scanning = false;
                 }).catch(() => { this.scanning = false; });
             } else {
+                const video = document.querySelector('#scanner-preview video');
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(t => t.stop());
+                    video.srcObject = null;
+                }
                 this.scanning = false;
             }
         },
