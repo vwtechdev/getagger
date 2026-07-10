@@ -678,6 +678,30 @@ hr {
     padding: 32px;
     text-align: center;
 }
+.modal-card-scanner {
+    max-width: 640px;
+    width: 95vw;
+    padding: 20px;
+    text-align: left;
+}
+.modal-card-scanner .scanner-preview {
+    aspect-ratio: 16/9;
+    min-height: 240px;
+}
+@media (max-width: 575.98px) {
+    .modal-card-scanner {
+        width: 100vw;
+        min-height: 90dvh;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .modal-card-scanner .scanner-preview {
+        min-height: 50dvh;
+        aspect-ratio: auto;
+    }
+}
 
 /* ===== Floating Action Button ===== */
 .fab {

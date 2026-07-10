@@ -154,6 +154,13 @@ document.addEventListener('alpine:init', () => {
         error: '',
         cameraState: 'prompt',
         permissionPending: false,
+        zoom: 1.0,
+        _videoTrack: null,
+        get zoomSupported() {
+            if (!this._videoTrack) return false;
+            const caps = this._videoTrack.getCapabilities();
+            return caps && caps.zoom && caps.zoom.min !== undefined;
+        },
         get supported() {
             return typeof Html5Qrcode !== 'undefined';
         },
@@ -209,13 +216,35 @@ document.addEventListener('alpine:init', () => {
                     },
                     () => {}
                 );
+                this._videoTrack = this._getVideoTrack();
+                this.zoom = 1.0;
             } catch (e) {
                 this.error = 'Não foi possível acessar a câmera. Verifique as permissões e tente novamente, ou digite o número manualmente.';
                 this.scanning = false;
                 if (this.scanner) { this.scanner.clear(); }
             }
         },
+        _getVideoTrack() {
+            const video = document.querySelector('#scanner-preview video');
+            if (video && video.srcObject) {
+                return video.srcObject.getVideoTracks()[0];
+            }
+            return null;
+        },
+        async adjustZoom(delta) {
+            const newZoom = Math.max(1, Math.min(10, +(this.zoom + delta).toFixed(1)));
+            this.zoom = newZoom;
+            if (this._videoTrack) {
+                try {
+                    await this._videoTrack.applyConstraints({
+                        advanced: [{ zoom: newZoom }]
+                    });
+                } catch {}
+            }
+        },
         stopScan() {
+            this._videoTrack = null;
+            this.zoom = 1.0;
             if (this.scanner) {
                 this.scanner.stop().then(() => {
                     this.scanner.clear();
