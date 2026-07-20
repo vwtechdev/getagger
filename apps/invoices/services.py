@@ -77,28 +77,18 @@ class InvoiceService:
             )
 
         # Associação automática via RETORNO REF NF
-        if ref_numbers and data['items']:
-            for i, ref_num in enumerate(ref_numbers):
-                if i >= len(data['items']):
-                    break
-                item_data = data['items'][i]
-                qty = item_data['quantity']
-                calls = ServiceCall.objects.filter(
-                    technician=technician,
-                    status='new',
-                ).filter(
-                    Q(source_invoice__number=ref_num) | Q(source_invoice_number=ref_num)
-                ).order_by('created_at')[:qty]
-                for call in calls:
-                    call.destination_invoice = invoice
-                    call.status = 'attended'
-                    # Se veio de cadastro manual (source_invoice_number sem FK),
-                    # corrige part_name com o nome do item da NF de entrada
-                    if not call.source_invoice_id:
-                        call.part_name = item_data['description'].upper()
-                    else:
-                        call.part_name = call.part_name.upper()
-                    call.save(update_fields=['destination_invoice', 'status', 'part_name'])
+        if ref_numbers:
+            calls = ServiceCall.objects.filter(
+                technician=technician,
+                destination_invoice__isnull=True,
+            ).filter(
+                Q(source_invoice__number__in=ref_numbers) | Q(source_invoice_number__in=ref_numbers)
+            )
+            for call in calls:
+                call.destination_invoice = invoice
+                call.status = 'attended'
+                call.part_name = call.part_name.upper()
+                call.save(update_fields=['destination_invoice', 'status', 'part_name'])
 
         # Só gera etiquetas se houver peças associadas
         if invoice.destination_calls.exists():
@@ -117,34 +107,18 @@ class InvoiceService:
             return 0
         ref_numbers = [r.strip() for r in invoice.return_refs.split('/') if r.strip()]
         associated = 0
-        items_list = list(invoice.items.all())
-        for i, ref_num in enumerate(ref_numbers):
-            item_data = items_list[i] if i < len(items_list) else None
-            calls = ServiceCall.objects.filter(
-                technician=technician,
-                status='new',
-            ).filter(
-                Q(source_invoice__number=ref_num) | Q(source_invoice_number=ref_num)
-            )
-            if item_data:
-                already = ServiceCall.objects.filter(
-                    destination_invoice=invoice,
-                ).filter(
-                    Q(source_invoice__number=ref_num) | Q(source_invoice_number=ref_num)
-                ).count()
-                remaining = item_data.quantity - already
-                if remaining <= 0:
-                    continue
-                calls = calls[:remaining]
-            for call in calls:
-                call.destination_invoice = invoice
-                call.status = 'attended'
-                if not call.source_invoice_id:
-                    call.part_name = item_data.description.upper()
-                else:
-                    call.part_name = call.part_name.upper()
-                call.save(update_fields=['destination_invoice', 'status', 'part_name'])
-                associated += 1
+        calls = ServiceCall.objects.filter(
+            technician=technician,
+            destination_invoice__isnull=True,
+        ).filter(
+            Q(source_invoice__number__in=ref_numbers) | Q(source_invoice_number__in=ref_numbers)
+        )
+        for call in calls:
+            call.destination_invoice = invoice
+            call.status = 'attended'
+            call.part_name = call.part_name.upper()
+            call.save(update_fields=['destination_invoice', 'status', 'part_name'])
+            associated += 1
         return associated
 
     @staticmethod

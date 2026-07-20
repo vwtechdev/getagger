@@ -63,7 +63,7 @@ def service_call_new(request):
             status=status,
         )
         for _ in range(quantity):
-            ServiceCallService.create(**kwargs)
+            call = ServiceCallService.create(**kwargs)
         messages.success(request, f'{quantity} peça(s) {call.part_name} criada(s).')
         return redirect('services:service_call_list')
     return render(request, 'services/service_call_form.html', {
